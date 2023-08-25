@@ -1,0 +1,98 @@
+---
+- name: "Check if ssh key exists in .keys/id_ecdsa"
+  ansible.builtin.stat:
+    path: ".keys/id_ecdsa"
+  register: ssh_key_check
+  run_once: true
+
+- name: "Generate new SSH key if not present"
+  ansible.builtin.command: ssh-keygen -t ecdsa -b 384 -C "ansible@localhost" -N "" -f ".keys/id_ecdsa"
+  when: not ssh_key_check.stat.exists
+  run_once: true
+
+- name: "Ensure ansible ssh key exist in hetzner cloud"
+  hetzner.hcloud.hcloud_ssh_key:
+    api_token: "{{ hcloud_api_token }}"
+
+    name: ansible
+    public_key: "{{ lookup('file', '.keys/id_ecdsa.pub') }}"
+    state: present
+  run_once: true
+
+- name: "Gather list of hcloud servers to remove absent servers"
+  hetzner.hcloud.hcloud_server_info:
+    api_token: "{{ hcloud_api_token }}"
+  register: output
+
+- name: "Remove cloud server which are no longer defined in the ansible inventory"
+  hetzner.hcloud.hcloud_server:
+    api_token: "{{ hcloud_api_token }}"
+
+    name: "{{ item.name }}"
+    state: absent
+  with_items: "{{ output.hcloud_server_info }}"
+  when:
+    - "item.name not in ansible_play_hosts_all"
+
+- name: "Create cloud server"
+  hetzner.hcloud.hcloud_server:
+    api_token: "{{ hcloud_api_token }}"
+
+    name: "{{ inventory_hostname }}"
+    server_type: "{{ server_type | default('cx11') }}"
+    location: "{{ location | default('hel1') }}"
+    image: "{{ image | default('ubuntu-22.04') }}"
+    ssh_keys: ["ansible"]
+    enable_ipv4: "{{ enable_ipv4 | default('false') }}"
+    enable_ipv6: "{{ enable_ipv6 | default('true') }}" 
+
+    state: present
+  register: create_server_output
+
+- name: "Gather hcloud server infos"
+  hetzner.hcloud.hcloud_server_info:
+    api_token: "{{ hcloud_api_token }}"
+  register: server_info
+  
+- name: "Filter the output from hcloud to have only the needed data"
+  ansible.builtin.set_fact:
+    server_info: "{{ server_info.hcloud_server_info | selectattr('name', 'equalto', inventory_hostname) | first }}"
+
+- name: "Set the assigned ipv6 network and first address as fact"
+  ansible.builtin.set_fact:
+    ipv6_net: "{{ server_info.ipv6 }}"
+    ipv6: "{{ server_info.ipv6 | first_address }}"
+  when: 
+    - "server_info.ipv6 is not none"
+
+- name: "Set the assigned ipv4 address as fact"
+  ansible.builtin.set_fact:
+    ipv4: "{{ server_info.ipv4_address }}"
+  when: 
+    - "server_info.ipv4_address is not none"
+
+- name: "Set fact whether the server has just been created or already existed"
+  ansible.builtin.set_fact:
+    new_server: "{{ create_server_output.changed }}"
+
+# when multiple hosts are defined the add_host task doesn't work as I was expecting 
+# it before that's why I decided to run the job only once, loop over all hosts 
+# and access the host variables using: vars['hostvars'][item]
+- name: "Adjust inventory entries"
+  ansible.builtin.add_host:
+    name: "{{ vars['hostvars'][item]['inventory_hostname'] }}"
+    ansible_host: "{{ vars['hostvars'][item]['ipv6'] | default(vars['hostvars'][item]['ipv4']) }}"
+    ansible_user: "{{ vars['hostvars'][item]['new_server'] | ternary('root', vars['hostvars'][item]['low_priv_user']) }}"
+    ansible_sudo_pass: "{{ vars['hostvars'][item]['low_priv_password'] }}"
+    groups: ["all"]
+  loop: "{{ ansible_play_hosts_all }}"
+  when: vars['hostvars'][item]['ipv4'] is defined or vars['hostvars'][item]['ipv6'] is defined
+  changed_when: false
+  run_once: true
+
+# if you have found a better solution, please write an issue or contribute!
+- name: "Waiting for cloud server creation"
+  ansible.builtin.pause:
+    seconds: 30
+  loop: "{{ ansible_play_hosts_all }}"
+  when: vars['hostvars'][item]['new_server']
