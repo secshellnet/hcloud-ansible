@@ -1,24 +1,23 @@
 # Secure Shell Networks: [Hetzner Cloud](https://www.hetzner.com/cloud) Ansible Inventory
 
+This repository template provides a ansible inventory to manage cloud server in 
+hetzner cloud (hcloud). It performes some basic linux hardening (unattended upgrades, 
+ssh, fail2ban) and can be extended by roles or tasks to perform whatever you need.
+For now it only supports ubuntu and debian, we tested both and they are working pretty good.
+
 ## Getting started
-1. Clone this git repository:
+1. Create a reporitory from this template repository and clone it:
    ```shell
-   git clone https://github.com/secshellnet/hcloud-ansible.git
+   git clone git@github.com:YOUR-USERNAME/hcloud-ansible.git
    ```
-2. Install the required ansible and python modules:
-   ```shell
-   ansible-galaxy collection install hetzner.hcloud
-   pip3 install ipaddress passlib
-   ```
-3. Create account on [hetzner.cloud](https://console.hetzner.cloud/)
-4. Create new cloud project
-5. Create an api token inside this cloud project
+2. Create account on [hetzner.cloud](https://console.hetzner.cloud/) and create a new cloud project
+3. Create an api token inside this cloud project
    ![Creating an api token in the hetzner cloud console](./img/hetzner-create-api-token.png)
-6. Generate a new secret for the ansible vault file
+4. Generate a new secret for the ansible vault file (you can use any password generated, store it in `.keys/all`)
    ```shell
-   cat /dev/urandom | tr -dc A-Za-z0-9 | fold -w 59 | head -n 1 > .keys/all
+   cat /dev/urandom | tr -dc A-Za-z0-9 | fold -w 20 | head -n 1 > .keys/all
    ```
-7. Create a new ansible vault
+5. Create a new ansible vault
    ```shell
    ansible-vault create group_vars/all/vault
    ```
@@ -28,7 +27,7 @@
    hcloud_api_token: "__YOUR_API_TOKEN__"
    worker_password: "__RANDOM_SECRET_PASSWORD__"
    ```
-8. Extend the [`inventory.yaml`](./inventory.yaml), it should look for example like this:
+6. Extend the [`inventory.yaml`](./inventory.yaml), it should look for example like this:
    ```yaml
    ---
    all:
@@ -42,29 +41,66 @@
        server2:
          server_type: cx21
          location: fsn1
-         image: ubuntu-22.04
+         image: debian-12
          enable_ipv4: true
          enable_ipv6: true
    ```
-9. Use the ansible inventory:
+
+7. Install the required ansible and python modules:
+   ```shell
+   ansible-galaxy collection install hetzner.hcloud
+   pip3 install -r requirements.txt
+   ```
+8. Use the ansible inventory:
    ```shell
    ansible-playbook playbook.yaml
    ```
-10. Create a backup of the [`.keys`](./keys/) directory. It contains the key to your vault and the ssh key ansible uses to connect to the cloud servers. For security reasons this directory is excluded from git operations (see [`.gitignore`](./.gitignore)), so by default it will not be pushed to your git repository!
+9. Create a backup of the [`.keys`](./keys/) directory. It contains the key to your vault 
+   and the ssh key ansible uses to connect to the cloud servers. For security reasons this 
+   directory is excluded from git operations (see [`.gitignore`](./.gitignore)), so by 
+   default it will not be pushed to your git repository!
+
+
+## What about GitOps?
+I've tried integrating git ops, but there is one problem: the GitHub actions runner does 
+not support ipv6... So you need an ipv4 address on each vm to use git ops for now.
+
+Create the following github actions variables and secrets in your repository and make 
+sure to commit and push both your `inventory.yaml` and `group_vars/all/vault` file:
+- Variable: `ENABLE_GITOPS` to value `1`
+- Secret: `SSH_KEY` to content of [`.keys/id_ecdsa`](./keys/id_ecdsa)
+- Secret: `ANSIBLE_KEYS_ALL` to the content of [`.keys/all`](./keys/all)
+
+## Structure
+```shell
+hcloud-ansible
+├── .github                      # github actions workflows
+│   └── workflows
+│       └── gitops.yaml
+├── .keys                        # ssh and ansible vault keys
+│   ├── all                      # key for ansible vault for group_vars all
+│   ├── id_ecdsa
+│   └── id_ecdsa.pub
+├── ansible.cfg
+├── filter_plugins               # python filters to be used in ansible
+│   └── network_filters.py
+├── group_vars
+│   └── all
+│       ├── vars.yaml            # plaintext global variables
+│       └── vault                # encrypted global variables (e. g. hetzner cloud api token)
+├── inventory.yaml
+├── playbook.yaml
+└── tasks                        # ansible subtasks to be used in the playbooks
+    ├── configure-sshd.yaml
+    ├── create-worker-user.yaml
+    └── hetzner-cloud.yaml
+```
 
 ## TODO
+- run OpenSCAP and check what could be improved
 
-|                                                  Feature                                                 |    State    |                         |
-|:--------------------------------------------------------------------------------------------------------:|:-----------:|:-----------------------:|
-| unattended-upgrades                                                                                      | test        |                         |
-| fail2ban                                                                                                 | configure   |                         |
-| disable legacy ssh ciphers                                                                               | think about |                         |
-| local firewall rules (iptables)                                                                          | think about | iptables and/or hcloud? |
-| hcloud firewall rules                                                                                    | think about | iptables and/or hcloud? |
-| auditd                                                                                                   | think about | how to log it           |
-| syslogd                                                                                                  | think about | to which logserver...   |
-| rkhunter / AIDE / snort                                                                                  | think about | how to log it           |
-| disable core dumps via soft / hard limits                                                                | think about |                         |
-| disable unused filesystems (cramfs, freevxfs, jffs2, hfs, hfsplus, udf, squashfs, dccp, rds, sctp, tips) | think about |                         |
-|                                                                                                          |             |                         |
-| test merging existing variables with the variables that are being set through the add_host task          | test        |                         |
+### think about
+- iptables firewall rules and/or hcloud firewall rules
+- auditd / rkhunter / AIDE / snort -> how to log it
+- disable core dumps via soft / hard limits
+- disable unused filesystems (cramfs, freevxfs, jffs2, hfs, hfsplus, udf, squashfs, dccp, rds, sctp, tips)

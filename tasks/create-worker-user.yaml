@@ -1,0 +1,33 @@
+---
+- name: "Create low privileged unix user account {{ worker_user }}"
+  ansible.builtin.user:
+    name: "{{ worker_user }}"
+    groups: "sudo"
+    append: true
+    shell: "/bin/bash"
+  become: true
+
+- name: "Set password for low priviledged unix user account {{ worker_user }}"
+  ansible.builtin.user:
+    name: "{{ worker_user }}"
+    password: "{{ worker_password | password_hash('sha512') }}"
+    password_lock: no
+  when: new_server
+
+- name: "Ensure .ssh directory exists for {{ worker_user }}"
+  ansible.builtin.file:
+    state: directory
+    path: "/home/{{ worker_user }}/.ssh/"
+    owner: "{{ worker_user }}"
+    group: "{{ worker_user }}"
+    mode: "0700"
+  become: true
+
+- name: "Copy ssh key of ansible to {{ worker_user }}"
+  ansible.builtin.copy:
+    src: ".keys/id_ecdsa.pub"
+    dest: "/home/{{ worker_user }}/.ssh/authorized_keys"
+    owner: "{{ worker_user }}"
+    group: "{{ worker_user }}"
+    mode: "0600"
+  become: true
