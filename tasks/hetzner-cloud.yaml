@@ -82,8 +82,8 @@
   ansible.builtin.add_host:
     name: "{{ vars['hostvars'][item]['inventory_hostname'] }}"
     ansible_host: "{{ vars['hostvars'][item]['ipv6'] | default(vars['hostvars'][item]['ipv4']) }}"
-    ansible_user: "{{ vars['hostvars'][item]['new_server'] | ternary('root', vars['hostvars'][item]['low_priv_user']) }}"
-    ansible_sudo_pass: "{{ vars['hostvars'][item]['low_priv_password'] }}"
+    ansible_user: "{{ vars['hostvars'][item]['new_server'] | ternary('root', vars['hostvars'][item]['worker_user']) }}"
+    ansible_sudo_pass: "{{ vars['hostvars'][item]['worker_password'] }}"
     groups: ["all"]
   loop: "{{ ansible_play_hosts_all }}"
   when: vars['hostvars'][item]['ipv4'] is defined or vars['hostvars'][item]['ipv6'] is defined

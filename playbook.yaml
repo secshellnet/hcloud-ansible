@@ -8,61 +8,47 @@
 
 - hosts: all
   handlers:
-    - name: "Restart ssh"
+    - name: "Restart sshd"
       ansible.builtin.systemd:
         name: "sshd"
         state: "restarted"
 
   tasks:
-    - name: "Create low privileged unix user account {{ low_priv_user }}"
+    - name: "Create low privileged unix user account {{ worker_user }}"
       ansible.builtin.user:
-        name: "{{ low_priv_user }}"
+        name: "{{ worker_user }}"
         groups: "sudo"
         append: true
         shell: "/bin/bash"
       become: true
 
-    - name: "Set password for low priviledged unix user account {{ low_priv_user }}"
+    - name: "Set password for low priviledged unix user account {{ worker_user }}"
       ansible.builtin.user:
-        name: "{{ low_priv_user }}"
-        password: "{{ low_priv_password | password_hash('sha512') }}"
+        name: "{{ worker_user }}"
+        password: "{{ worker_password | password_hash('sha512') }}"
         password_lock: no
       when: new_server
 
-    - name: "Ensure .ssh directory exists for {{ low_priv_user }}"
+    - name: "Ensure .ssh directory exists for {{ worker_user }}"
       ansible.builtin.file:
         state: directory
-        path: "/home/{{ low_priv_user }}/.ssh/"
-        owner: "{{ low_priv_user }}"
-        group: "{{ low_priv_user }}"
+        path: "/home/{{ worker_user }}/.ssh/"
+        owner: "{{ worker_user }}"
+        group: "{{ worker_user }}"
         mode: "0700"
       become: true
 
-    - name: "Copy ssh key of ansible to {{ low_priv_user }}"
+    - name: "Copy ssh key of ansible to {{ worker_user }}"
       ansible.builtin.copy:
         src: ".keys/id_ecdsa.pub"
-        dest: "/home/{{ low_priv_user }}/.ssh/authorized_keys"
-        owner: "{{ low_priv_user }}"
-        group: "{{ low_priv_user }}"
+        dest: "/home/{{ worker_user }}/.ssh/authorized_keys"
+        owner: "{{ worker_user }}"
+        group: "{{ worker_user }}"
         mode: "0600"
       become: true
 
-    - name: "Disable ssh root login"
-      ansible.builtin.lineinfile:
-        path: "/etc/ssh/sshd_config"
-        regexp: "^#?PermitRootLogin"
-        line: "PermitRootLogin no"
-      notify: "Restart ssh"
-      become: true
-
-    - name: "Disable ssh password authentication"
-      ansible.builtin.lineinfile:
-        path: "/etc/ssh/sshd_config"
-        regexp: "^#?PasswordAuthentication"
-        line: "PasswordAuthentication no"
-      notify: "Restart ssh"
-      become: true
-
+    - ansible.builtin.include_tasks: "tasks/ssh.yaml"
+    
     - name: "Install tools and requirements"
       ansible.builtin.apt:
         update_cache: true
@@ -76,5 +62,9 @@
           - tcpdump
           - ncdu
           - jq
+          - iptables
+          - iptables-persistent
+          - unattended-updates
+          - fail2ban
         state: present
       become: true

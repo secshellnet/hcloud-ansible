@@ -1,2 +1,2 @@
 ---
-low_priv_user: "worker"
+worker_user: "worker"

@@ -26,7 +26,7 @@
    ```yaml
    ---
    hcloud_api_token: "__YOUR_API_TOKEN__"
-   low_priv_password: "__RANDOM_SECRET_PASSWORD__"
+   worker_password: "__RANDOM_SECRET_PASSWORD__"
    ```
 8. Extend the [`inventory.yaml`](./inventory.yaml), it should look for example like this:
    ```yaml
@@ -51,3 +51,20 @@
    ansible-playbook playbook.yaml
    ```
 10. Create a backup of the [`.keys`](./keys/) directory. It contains the key to your vault and the ssh key ansible uses to connect to the cloud servers. For security reasons this directory is excluded from git operations (see [`.gitignore`](./.gitignore)), so by default it will not be pushed to your git repository!
+
+## TODO
+
+|                                                  Feature                                                 |    State    |                         |
+|:--------------------------------------------------------------------------------------------------------:|:-----------:|:-----------------------:|
+| unattended-upgrades                                                                                      | test        |                         |
+| fail2ban                                                                                                 | configure   |                         |
+| disable legacy ssh ciphers                                                                               | think about |                         |
+| local firewall rules (iptables)                                                                          | think about | iptables and/or hcloud? |
+| hcloud firewall rules                                                                                    | think about | iptables and/or hcloud? |
+| auditd                                                                                                   | think about | how to log it           |
+| syslogd                                                                                                  | think about | to which logserver...   |
+| rkhunter / AIDE / snort                                                                                  | think about | how to log it           |
+| disable core dumps via soft / hard limits                                                                | think about |                         |
+| disable unused filesystems (cramfs, freevxfs, jffs2, hfs, hfsplus, udf, squashfs, dccp, rds, sctp, tips) | think about |                         |
+|                                                                                                          |             |                         |
+| test merging existing variables with the variables that are being set through the add_host task          | test        |                         |
