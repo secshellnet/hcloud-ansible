@@ -3,7 +3,7 @@
 This repository template provides a ansible inventory to manage cloud server in 
 hetzner cloud (hcloud). It performes some basic linux hardening (unattended upgrades, 
 ssh, fail2ban) and can be extended by roles or tasks to perform whatever you need.
-For now it only supports ubuntu and debian, we tested both and they are working pretty good.
+For now it only supports ubuntu (18.04, 20.04, 22.04) and debian (10, 11, 12), we tested both and they are working pretty good.
 
 ## Getting started
 1. Create a reporitory from this template repository and clone it:
@@ -60,7 +60,6 @@ For now it only supports ubuntu and debian, we tested both and they are working 
    directory is excluded from git operations (see [`.gitignore`](./.gitignore)), so by 
    default it will not be pushed to your git repository!
 
-
 ## What about GitOps?
 I've tried integrating git ops, but there is one problem: the GitHub actions runner does 
 not support ipv6... So you need an ipv4 address on each vm to use git ops for now.
@@ -90,10 +89,12 @@ hcloud-ansible
 │       └── vault                # encrypted global variables (e. g. hetzner cloud api token)
 ├── inventory.yaml
 ├── playbook.yaml
+├── roles
+│   ├── ansible-role-fail2ban
+│   └── ansible-role-sshd
 └── tasks                        # ansible subtasks to be used in the playbooks
-    ├── configure-sshd.yaml
-    ├── create-worker-user.yaml
-    └── hetzner-cloud.yaml
+    ├── create-worker-user.yaml
+    └── hetzner-cloud.yaml
 ```
 
 ## TODO

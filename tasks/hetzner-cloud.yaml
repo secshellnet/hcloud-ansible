@@ -19,10 +19,14 @@
     state: present
   run_once: true
 
-- name: "Gather list of hcloud servers to remove absent servers"
+- name: "Gather list of hcloud servers"
   hetzner.hcloud.hcloud_server_info:
     api_token: "{{ hcloud_api_token }}"
   register: output
+
+- name: "Map response of hcloud_server_info to list of server names"
+  ansible.builtin.set_fact:
+    existing_cloud_servers: "{{ output.hcloud_server_info | map(attribute='name') | list }}"
 
 - name: "Remove cloud server which are no longer defined in the ansible inventory"
   hetzner.hcloud.hcloud_server:
@@ -30,9 +34,9 @@
 
     name: "{{ item.name }}"
     state: absent
-  with_items: "{{ output.hcloud_server_info }}"
+  with_items: "{{ existing_cloud_servers }}"
   when:
-    - "item.name not in ansible_play_hosts_all"
+    - "item not in ansible_play_hosts_all"
 
 - name: "Create cloud server"
   hetzner.hcloud.hcloud_server:
@@ -45,9 +49,11 @@
     ssh_keys: ["ansible"]
     enable_ipv4: "{{ enable_ipv4 | default('false') }}"
     enable_ipv6: "{{ enable_ipv6 | default('true') }}"
+    labels: {"new": ""}
 
     state: present
-  register: create_server_output
+  when:
+    - "inventory_hostname not in existing_cloud_servers"
 
 - name: "Gather hcloud server infos"
   hetzner.hcloud.hcloud_server_info:
@@ -73,7 +79,7 @@
 
 - name: "Set fact whether the server has just been created or already existed"
   ansible.builtin.set_fact:
-    new_server: "{{ create_server_output.changed }}"
+    new_server: "{{ 'new' in server_info.labels }}"
 
 # when multiple hosts are defined the add_host task doesn't work as I was expecting 
 # it before that's why I decided to run the job only once, loop over all hosts 
