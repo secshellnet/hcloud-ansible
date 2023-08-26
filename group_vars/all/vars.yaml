@@ -1,2 +1,5 @@
 ---
 worker_user: "worker"
+
+# features / roles to install
+install_nginx: false

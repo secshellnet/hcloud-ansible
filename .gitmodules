@@ -4,3 +4,6 @@
 [submodule "roles/ansible-role-sshd"]
 	path = roles/ansible-role-sshd
 	url = https://github.com/secshellnet/ansible-role-sshd
+[submodule "roles/ansible-role-nginx"]
+	path = roles/ansible-role-nginx
+	url = https://github.com/secshellnet/ansible-role-nginx

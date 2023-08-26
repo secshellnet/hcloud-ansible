@@ -2,7 +2,7 @@
 - name: "Create low privileged unix user account {{ worker_user }}"
   ansible.builtin.user:
     name: "{{ worker_user }}"
-    groups: "sudo"
+    groups: "{{ (ansible_distribution in ['Ubuntu', 'Debian']) | ternary('sudo', 'wheel') }}"
     append: true
     shell: "/bin/bash"
   become: true
