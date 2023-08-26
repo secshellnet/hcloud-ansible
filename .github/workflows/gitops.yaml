@@ -1,0 +1,67 @@
+---
+name: GitOps
+
+on:
+  push:
+    branches: [main, development]
+  pull_request:
+  schedule:
+    - cron: '53 1 */15 * *'
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/secshellnet/ansible-vyos-lint
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Run ansible-lint
+        run: |
+          ansible-lint -x yaml[comments],yaml[empty-lines],\
+            yaml[new-line-at-end-of-file],yaml[trailing-spaces],\
+            var-spacing,command-instead-of-shell,no-changed-when,\
+            name[template],args[module]
+
+  run:
+    runs-on: ubuntu-latest
+    needs: [lint]
+
+    steps:
+      - uses: actions/checkout@v3
+        if: vars.ENABLE_GITOPS == '1'
+
+      - name: Prepare environment
+        if: vars.ENABLE_GITOPS == '1'
+        run: |
+          echo "${{ secrets.SSH_KEY }}" > .keys/id_ecdsa
+          chmod 600 .keys/id_ecdsa
+          ssh-keygen -f .keys/id_ecdsa -y > .keys/id_ecdsa.pub
+
+          echo "${{ secrets.ANSIBLE_KEYS_ALL }}" > .keys/all
+
+          git submodule update
+          ansible-galaxy collection install hetzner.hcloud
+          /opt/pipx/venvs/ansible-core/bin/python -m pip install -r requirements.txt
+
+          # not quiet sure why, but we need this package in this python environment
+          pip3 install python-dateutil
+
+      - name: Run ansible inventory in check mode
+        if: |
+          vars.ENABLE_GITOPS == '1' &&
+          github.event_name == 'pull_request'
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: false
+        run: |
+          ansible-playbook playbook.yaml --check
+
+      - name: Deploy ansible inventory
+        if: |
+          vars.ENABLE_GITOPS == '1'
+          && github.event_name != 'pull_request'
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: false
+        run: |
+          ansible-playbook playbook.yaml

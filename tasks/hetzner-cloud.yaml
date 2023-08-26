@@ -5,7 +5,7 @@
   register: ssh_key_check
   run_once: true
 
-- name: "Generate new SSH key if not present"
+- name: "Generate new ssh key if not present"
   ansible.builtin.command: ssh-keygen -t ecdsa -b 384 -C "ansible@localhost" -N "" -f ".keys/id_ecdsa"
   when: not ssh_key_check.stat.exists
   run_once: true
@@ -44,7 +44,7 @@
     image: "{{ image | default('ubuntu-22.04') }}"
     ssh_keys: ["ansible"]
     enable_ipv4: "{{ enable_ipv4 | default('false') }}"
-    enable_ipv6: "{{ enable_ipv6 | default('true') }}" 
+    enable_ipv6: "{{ enable_ipv6 | default('true') }}"
 
     state: present
   register: create_server_output
@@ -53,7 +53,7 @@
   hetzner.hcloud.hcloud_server_info:
     api_token: "{{ hcloud_api_token }}"
   register: server_info
-  
+
 - name: "Filter the output from hcloud to have only the needed data"
   ansible.builtin.set_fact:
     server_info: "{{ server_info.hcloud_server_info | selectattr('name', 'equalto', inventory_hostname) | first }}"
@@ -62,13 +62,13 @@
   ansible.builtin.set_fact:
     ipv6_net: "{{ server_info.ipv6 }}"
     ipv6: "{{ server_info.ipv6 | first_address }}"
-  when: 
+  when:
     - "server_info.ipv6 is not none"
 
 - name: "Set the assigned ipv4 address as fact"
   ansible.builtin.set_fact:
     ipv4: "{{ server_info.ipv4_address }}"
-  when: 
+  when:
     - "server_info.ipv4_address is not none"
 
 - name: "Set fact whether the server has just been created or already existed"
@@ -82,8 +82,8 @@
   ansible.builtin.add_host:
     name: "{{ vars['hostvars'][item]['inventory_hostname'] }}"
     ansible_host: "{{ vars['hostvars'][item]['ipv6'] | default(vars['hostvars'][item]['ipv4']) }}"
-    ansible_user: "{{ vars['hostvars'][item]['new_server'] | ternary('root', vars['hostvars'][item]['low_priv_user']) }}"
-    ansible_sudo_pass: "{{ vars['hostvars'][item]['low_priv_password'] }}"
+    ansible_user: "{{ vars['hostvars'][item]['new_server'] | ternary('root', vars['hostvars'][item]['worker_user']) }}"
+    ansible_sudo_pass: "{{ vars['hostvars'][item]['worker_password'] }}"
     groups: ["all"]
   loop: "{{ ansible_play_hosts_all }}"
   when: vars['hostvars'][item]['ipv4'] is defined or vars['hostvars'][item]['ipv6'] is defined
