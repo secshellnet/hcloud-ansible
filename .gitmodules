@@ -1,0 +1,6 @@
+[submodule "roles/ansible-role-fail2ban"]
+	path = roles/ansible-role-fail2ban
+	url = https://github.com/secshellnet/ansible-role-fail2ban
+[submodule "roles/ansible-role-sshd"]
+	path = roles/ansible-role-sshd
+	url = https://github.com/secshellnet/ansible-role-sshd

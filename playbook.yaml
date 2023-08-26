@@ -7,15 +7,11 @@
     - ansible.builtin.include_tasks: "tasks/hetzner-cloud.yaml"
 
 - hosts: all
-  handlers:
-    - name: "Restart sshd"
-      ansible.builtin.systemd:
-        name: "sshd"
-        state: "restarted"
-
   tasks:
     - ansible.builtin.include_tasks: "tasks/create-worker-user.yaml"
-    - ansible.builtin.include_tasks: "tasks/configure-sshd.yaml"
+
+    - ansible.builtin.include_role:
+        name: "roles/ansible-role-sshd"
 
     - name: "Install tools and requirements"
       ansible.builtin.apt:
@@ -36,4 +32,17 @@
         state: present
       become: true
 
-    - ansible.builtin.include_tasks: "tasks/configure-fail2ban.yaml"
+    - ansible.builtin.include_role:
+        name: "roles/ansible-role-fail2ban"
+
+  post_tasks:
+    - name: "Remove labels from cloud server {{ inventory_hostname }}"
+      hetzner.hcloud.hcloud_server:
+        api_token: "{{ hcloud_api_token }}"
+
+        name: "{{ inventory_hostname }}"
+        labels: {}
+
+        state: present
+      when: new_server
+      delegate_to: localhost

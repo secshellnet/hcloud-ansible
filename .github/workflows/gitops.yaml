@@ -3,7 +3,7 @@ name: GitOps
 
 on:
   push:
-    branches: [main, development]
+    branches: [main]
   pull_request:
   schedule:
     - cron: '53 1 */15 * *'
@@ -12,7 +12,7 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/secshellnet/ansible-vyos-lint
+      image: ghcr.io/ansible/creator-ee
 
     steps:
       - uses: actions/checkout@v3
