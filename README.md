@@ -3,7 +3,11 @@
 This repository template provides a ansible inventory to manage cloud server in 
 hetzner cloud (hcloud). It performes some basic linux hardening (unattended upgrades, 
 ssh, fail2ban) and can be extended by roles or tasks to perform whatever you need.
-For now it only supports ubuntu (18.04, 20.04, 22.04) and debian (10, 11, 12), we tested both and they are working pretty good.
+
+## Supported Images
+- Ubuntu (18.04, 20.04, 22.04)
+- Debian (10, 11, 12)
+- Fedora (37, 38)
 
 ## Getting started
 1. Create a reporitory from this template repository and clone it:
@@ -91,6 +95,7 @@ hcloud-ansible
 ├── playbook.yaml
 ├── roles
 │   ├── ansible-role-fail2ban
+│   ├── ansible-role-nginx
 │   └── ansible-role-sshd
 └── tasks                        # ansible subtasks to be used in the playbooks
     ├── create-worker-user.yaml
@@ -101,7 +106,7 @@ hcloud-ansible
 - run OpenSCAP and check what could be improved
 
 ### think about
-- iptables firewall rules and/or hcloud firewall rules
+- (iptables/firewalld) firewall rules and/or hcloud firewall rules -> integration of hcloud would be independent of distribution -> if we want to support distros like fedora in future it would be better for now
 - auditd / rkhunter / AIDE / snort -> how to log it
 - disable core dumps via soft / hard limits
 - disable unused filesystems (cramfs, freevxfs, jffs2, hfs, hfsplus, udf, squashfs, dccp, rds, sctp, tips)
