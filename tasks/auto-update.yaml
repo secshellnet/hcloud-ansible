@@ -1,0 +1,29 @@
+---
+- name: "Install unattended upgrades"
+  ansible.builtin.package:
+    name: unattended-upgrades
+    state: present
+  when: ansible_pkg_mgr == 'apt'
+  become: true
+
+- name: "Install dnf-automatic"
+  when: ansible_pkg_mgr == 'dnf'
+  block:
+    - name: "Install dnf-automatic"
+      ansible.builtin.package:
+        name: dnf-automatic
+        state: present
+      become: true
+
+    - name: "Create dnf-automatic configuration file"
+      ansible.builtin.template:
+        src: ../templates/dnf-automatic.conf.j2
+        dest: /etc/dnf/dnf-automatic.conf
+      become: true
+
+    - name: "Enable and start dnf-automatic timer"
+      ansible.builtin.systemd:
+        name: dnf-automatic.timer
+        enabled: yes
+        state: started
+      become: true

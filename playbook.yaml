@@ -34,7 +34,9 @@
     - ansible.builtin.include_role:
         name: "roles/ansible-role-fail2ban"
 
-    #- name: "Install tools and requirements"
+    - ansible.builtin.include_tasks: "tasks/auto-update.yaml"
+
+    #- name: "Install unattended upgrades"
     #  ansible.builtin.apt:
     #    name:
     #      - python3-requests
@@ -48,7 +50,6 @@
     #      - jq
     #      - iptables
     #      - iptables-persistent
-    #      - unattended-upgrades
     #    state: present
     #  become: true
 
