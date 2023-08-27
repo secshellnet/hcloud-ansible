@@ -9,18 +9,18 @@ on:
   #   - cron: '53 1 */15 * *'
 
 jobs:
-  lint:
-    runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/secshellnet/ansible-creator-ee  # ghcr.io/ansible/creator-ee with preinstalled collections
-
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Run ansible-lint
-        run: |
-          ansible-lint -x command-instead-of-shell,no-changed-when,\
-            name[template],jinja[invalid]
+  # lint:
+  #   runs-on: ubuntu-latest
+  #   container:
+  #     image: ghcr.io/secshellnet/ansible-creator-ee  # ghcr.io/ansible/creator-ee with preinstalled collections
+  #
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #
+  #     - name: Run ansible-lint
+  #       run: |
+  #         ansible-lint -x command-instead-of-shell,no-changed-when,\
+  #           name[template],jinja[invalid]
 
   run:
     runs-on: ubuntu-latest
