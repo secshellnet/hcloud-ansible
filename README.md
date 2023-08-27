@@ -8,6 +8,7 @@ ssh, fail2ban) and can be extended by roles or tasks to perform whatever you nee
 - Ubuntu (18.04, 20.04, 22.04)
 - Debian (10, 11, 12)
 - Fedora (37, 38)
+- CentOS (7, Stream 8, Stream 9)
 
 ## Getting started
 1. Create a reporitory from this template repository and clone it:

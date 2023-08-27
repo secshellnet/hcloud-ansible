@@ -43,12 +43,12 @@
     api_token: "{{ hcloud_api_token }}"
 
     name: "{{ inventory_hostname }}"
-    server_type: "{{ server_type | default('cx11') }}"
-    location: "{{ location | default('hel1') }}"
-    image: "{{ image | default('ubuntu-22.04') }}"
+    server_type: "{{ server_type }}"
+    location: "{{ location }}"
+    image: "{{ image }}"
     ssh_keys: ["ansible"]
-    enable_ipv4: "{{ enable_ipv4 | default('false') }}"
-    enable_ipv6: "{{ enable_ipv6 | default('true') }}"
+    enable_ipv4: "{{ enable_ipv4 }}"
+    enable_ipv6: "{{ enable_ipv6 }}"
     labels: {"new": ""}
 
     state: present

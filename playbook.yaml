@@ -10,9 +10,6 @@
   tasks:
     - ansible.builtin.include_tasks: "tasks/create-worker-user.yaml"
 
-    - ansible.builtin.include_role:
-        name: "roles/ansible-role-sshd"
-
     - name: "Remove labels from cloud server {{ inventory_hostname }}"
       hetzner.hcloud.hcloud_server:
         api_token: "{{ hcloud_api_token }}"
@@ -24,11 +21,21 @@
       when: new_server
       delegate_to: localhost
 
+    - ansible.builtin.include_role:
+        name: "roles/ansible-role-sshd"
+
     - name: "Update repositories cache on systems using apt"
       ansible.builtin.apt:
         update_cache: yes
       when: ansible_pkg_mgr == 'apt'
       changed_when: false
+      become: true
+
+    - name: "Install extra packages for enterprise linux"
+      ansible.builtin.package:
+        name: epel-release
+        state: present
+      when: "ansible_distribution == 'CentOS'"
       become: true
 
     - ansible.builtin.include_role:
@@ -55,6 +62,6 @@
 
     - ansible.builtin.include_role:
         name: "roles/ansible-role-nginx"
-      when: 
+      when:
         - enable_ipv4  # otherwise acme.sh cannot be installed
         - install_nginx
