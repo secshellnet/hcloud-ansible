@@ -50,26 +50,15 @@
     - name: "Configure automatic updates of installed packages"
       ansible.builtin.include_tasks: "tasks/auto-update.yaml"
 
-    # - name: "Install unattended upgrades"
-    #   ansible.builtin.apt:
-    #     name:
-    #       - python3-requests
-    #       - python3-apt
-    #       - curl
-    #       - wget
-    #       - dnsutils
-    #       - mtr
-    #       - tcpdump
-    #       - ncdu
-    #       - jq
-    #       - iptables
-    #       - iptables-persistent
-    #     state: present
-    #   become: true
-
     - name: "Setup nginx"
       ansible.builtin.include_role:
         name: "ansible-role-nginx"
       when:
         - enable_ipv4  # otherwise acme.sh cannot be installed
         - install_nginx
+
+    - name: "Setup postgresql"
+      ansible.builtin.include_role:
+        name: "ansible-role-postgresql"
+      when:
+        - install_postgres

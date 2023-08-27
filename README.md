@@ -80,8 +80,6 @@ hcloud-ansible
 │   ├── id_ecdsa
 │   └── id_ecdsa.pub
 ├── ansible.cfg
-├── filter_plugins               # python filters to be used in ansible
-│   └── network_filters.py
 ├── group_vars
 │   └── all
 │       ├── vars.yaml            # plaintext global variables
@@ -90,15 +88,21 @@ hcloud-ansible
 ├── playbook.yaml
 ├── roles
 │   ├── ansible-role-fail2ban
-│   ├── ansible-role-nginx
+│   ├── ansible-role-nginx       # our role to install nginx with acme.sh and cf dns integration
+│   ├── ansible-role-postgresql  # role to install a postgresql database server
 │   └── ansible-role-sshd
-└── tasks                        # ansible subtasks to be used in the playbooks
-    ├── create-worker-user.yaml
-    └── hetzner-cloud.yaml
+├── tasks
+│   ├── auto-update.yaml
+│   ├── create-worker-user.yaml
+│   └── hetzner-cloud.yaml       # task to manage cloud servers and aquire information to connect
+└── templates
+    └── dnf-automatic.conf.j2
+
 ```
 
 ## TODO
 - run OpenSCAP and check what could be improved
+- test postgresql role
 
 ### think about
 - (iptables/firewalld) firewall rules and/or hcloud firewall rules -> integration of hcloud would be independent of distribution -> if we want to support distros like fedora in future it would be better for now

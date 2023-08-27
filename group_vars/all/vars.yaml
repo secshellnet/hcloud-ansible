@@ -10,3 +10,4 @@ enable_ipv6: true
 
 # features / roles to install
 install_nginx: false
+install_postgres: false
