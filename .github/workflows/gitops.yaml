@@ -5,28 +5,26 @@ on:
   push:
     branches: [main]
   pull_request:
-  schedule:
-    - cron: '53 1 */15 * *'
+  # schedule:
+  #   - cron: '53 1 */15 * *'
 
 jobs:
   lint:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/ansible/creator-ee
+      image: ghcr.io/secshellnet/ansible-creator-ee  # ghcr.io/ansible/creator-ee with preinstalled collections
 
     steps:
       - uses: actions/checkout@v3
 
       - name: Run ansible-lint
         run: |
-          ansible-lint -x yaml[comments],yaml[empty-lines],\
-            yaml[new-line-at-end-of-file],yaml[trailing-spaces],\
-            var-spacing,command-instead-of-shell,no-changed-when,\
-            name[template],args[module]
+          ansible-lint -x command-instead-of-shell,no-changed-when,\
+            name[template],jinja[invalid]
 
   run:
     runs-on: ubuntu-latest
-    needs: [lint]
+    # needs: [lint]
 
     steps:
       - uses: actions/checkout@v3

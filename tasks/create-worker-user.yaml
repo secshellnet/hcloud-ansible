@@ -11,7 +11,7 @@
   ansible.builtin.user:
     name: "{{ worker_user }}"
     password: "{{ worker_password | password_hash('sha512') }}"
-    password_lock: no
+    password_lock: false
   when: new_server
 
 - name: "Ensure .ssh directory exists for {{ worker_user }}"

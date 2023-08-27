@@ -1,14 +1,18 @@
 ---
-- hosts: all
+- name: "Play to create hetzner cloud servers"
+  hosts: all
   connection: local
   gather_facts: false
 
   tasks:
-    - ansible.builtin.include_tasks: "tasks/hetzner-cloud.yaml"
+    - name: "Interact with hcloud to create cloud servers"
+      ansible.builtin.include_tasks: "tasks/hetzner-cloud.yaml"
 
-- hosts: all
+- name: "Play to configure servers"
+  hosts: all
   tasks:
-    - ansible.builtin.include_tasks: "tasks/create-worker-user.yaml"
+    - name: "Create low privileged user account"
+      ansible.builtin.include_tasks: "tasks/create-worker-user.yaml"
 
     - name: "Remove labels from cloud server {{ inventory_hostname }}"
       hetzner.hcloud.hcloud_server:
@@ -21,12 +25,13 @@
       when: new_server
       delegate_to: localhost
 
-    - ansible.builtin.include_role:
-        name: "roles/ansible-role-sshd"
+    - name: "Configure sshd"
+      ansible.builtin.include_role:
+        name: "ansible-role-sshd"
 
     - name: "Update repositories cache on systems using apt"
       ansible.builtin.apt:
-        update_cache: yes
+        update_cache: true
       when: ansible_pkg_mgr == 'apt'
       changed_when: false
       become: true
@@ -38,30 +43,33 @@
       when: "ansible_distribution in ['CentOS', 'AlmaLinux', 'Rocky']"
       become: true
 
-    - ansible.builtin.include_role:
-        name: "roles/ansible-role-fail2ban"
+    - name: "Setup fail2ban"
+      ansible.builtin.include_role:
+        name: "ansible-role-fail2ban"
 
-    - ansible.builtin.include_tasks: "tasks/auto-update.yaml"
+    - name: "Configure automatic updates of installed packages"
+      ansible.builtin.include_tasks: "tasks/auto-update.yaml"
 
-    #- name: "Install unattended upgrades"
-    #  ansible.builtin.apt:
-    #    name:
-    #      - python3-requests
-    #      - python3-apt
-    #      - curl
-    #      - wget
-    #      - dnsutils
-    #      - mtr
-    #      - tcpdump
-    #      - ncdu
-    #      - jq
-    #      - iptables
-    #      - iptables-persistent
-    #    state: present
-    #  become: true
+    # - name: "Install unattended upgrades"
+    #   ansible.builtin.apt:
+    #     name:
+    #       - python3-requests
+    #       - python3-apt
+    #       - curl
+    #       - wget
+    #       - dnsutils
+    #       - mtr
+    #       - tcpdump
+    #       - ncdu
+    #       - jq
+    #       - iptables
+    #       - iptables-persistent
+    #     state: present
+    #   become: true
 
-    - ansible.builtin.include_role:
-        name: "roles/ansible-role-nginx"
+    - name: "Setup nginx"
+      ansible.builtin.include_role:
+        name: "ansible-role-nginx"
       when:
         - enable_ipv4  # otherwise acme.sh cannot be installed
         - install_nginx

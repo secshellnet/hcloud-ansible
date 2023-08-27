@@ -81,8 +81,8 @@
   ansible.builtin.set_fact:
     new_server: "{{ 'new' in server_info.labels }}"
 
-# when multiple hosts are defined the add_host task doesn't work as I was expecting 
-# it before that's why I decided to run the job only once, loop over all hosts 
+# when multiple hosts are defined the add_host task doesn't work as I was expecting
+# it before that's why I decided to run the job only once, loop over all hosts
 # and access the host variables using: vars['hostvars'][item]
 - name: "Adjust inventory entries"
   ansible.builtin.add_host:

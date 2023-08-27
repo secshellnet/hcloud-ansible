@@ -17,13 +17,14 @@
 
     - name: "Create dnf-automatic configuration file"
       ansible.builtin.template:
-        src: ../templates/dnf-automatic.conf.j2
+        src: dnf-automatic.conf.j2
         dest: /etc/dnf/dnf-automatic.conf
+        mode: "0644"
       become: true
 
     - name: "Enable and start dnf-automatic timer"
       ansible.builtin.systemd:
         name: dnf-automatic.timer
-        enabled: yes
+        enabled: true
         state: started
       become: true
