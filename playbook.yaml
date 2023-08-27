@@ -35,7 +35,7 @@
       ansible.builtin.package:
         name: epel-release
         state: present
-      when: "ansible_distribution == 'CentOS'"
+      when: "ansible_distribution in ['CentOS', 'AlmaLinux', 'Rocky']"
       become: true
 
     - ansible.builtin.include_role:
