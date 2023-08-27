@@ -1,5 +1,12 @@
 ---
-worker_user: "worker"
+worker_user: worker
+
+# hcloud defaults for cloud server
+server_type: cx11
+location: hel1
+image: ubuntu-22.04
+enable_ipv4: false
+enable_ipv6: true
 
 # features / roles to install
 install_nginx: false
