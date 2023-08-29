@@ -80,8 +80,6 @@ hcloud-ansible
 │   ├── id_ecdsa
 │   └── id_ecdsa.pub
 ├── ansible.cfg
-├── filter_plugins               # python filters to be used in ansible
-│   └── network_filters.py
 ├── group_vars
 │   └── all
 │       ├── vars.yaml            # plaintext global variables
@@ -90,15 +88,69 @@ hcloud-ansible
 ├── playbook.yaml
 ├── roles
 │   ├── ansible-role-fail2ban
-│   ├── ansible-role-nginx
+│   ├── ansible-role-nginx       # our role to install nginx with acme.sh and cf dns integration
+│   ├── ansible-role-postgresql  # role to install a postgresql database server
 │   └── ansible-role-sshd
-└── tasks                        # ansible subtasks to be used in the playbooks
-    ├── create-worker-user.yaml
-    └── hetzner-cloud.yaml
+├── tasks
+│   ├── auto-update.yaml
+│   ├── create-worker-user.yaml
+│   └── hetzner-cloud.yaml       # task to manage cloud servers and aquire information to connect
+└── templates
+    └── dnf-automatic.conf.j2
 ```
+
+### [ansible-role-sshd](https://github.com/secshellnet/ansible-role-sshd)
+
+### [ansible-role-fail2ban](https://github.com/secshellnet/ansible-role-fail2ban)
+
+### [ansible-role-nginx](https://github.com/secshellnet/ansible-role-nginx)
+
+### [ansible-role-redis](https://github.com/geerlingguy/ansible-role-redis)
+
+### [ansible-role-postgresql](https://github.com/geerlingguy/ansible-role-postgresql)
+```yaml
+# host_vars/<hostname>/vars.yaml
+---
+postgresql_databases:
+  - name: nextcloud
+    state: present
+
+  # synapse requires lc_collate and lc_ctype to be set to C
+  - name: synapse
+    lc_collate: C
+    lc_ctype: C
+    state: present
+
+postgresql_users_u:
+  - name: nextcloud
+    db: nextcloud
+    state: present
+
+  - name: synapse
+    db: synapse
+    state: present
+```
+
+```yaml
+# host_vars/<hostname>/vault
+---
+postgresql_users_e:
+  - name: nextcloud
+    password: s3cr3t-p4ssw0rd
+
+  - name: synapse
+    password: s3cr3t-p4ssw0rd
+```
+
+- You can spawn a postgres shell using: `sudo -u postgres psql`.
+- Use `\l` to list databases, `\du` to list users and `\dt` to list tables.
+- Use `\c <database>` to connect to a database
+- You can also connect using tcp (like any other application): 
+  `psql -h 127.0.0.1 -U <user> <database>`
 
 ## TODO
 - run OpenSCAP and check what could be improved
+- test postgresql role
 
 ### think about
 - (iptables/firewalld) firewall rules and/or hcloud firewall rules -> integration of hcloud would be independent of distribution -> if we want to support distros like fedora in future it would be better for now

@@ -50,26 +50,35 @@
     - name: "Configure automatic updates of installed packages"
       ansible.builtin.include_tasks: "tasks/auto-update.yaml"
 
-    # - name: "Install unattended upgrades"
-    #   ansible.builtin.apt:
-    #     name:
-    #       - python3-requests
-    #       - python3-apt
-    #       - curl
-    #       - wget
-    #       - dnsutils
-    #       - mtr
-    #       - tcpdump
-    #       - ncdu
-    #       - jq
-    #       - iptables
-    #       - iptables-persistent
-    #     state: present
-    #   become: true
-
     - name: "Setup nginx"
       ansible.builtin.include_role:
         name: "ansible-role-nginx"
       when:
         - enable_ipv4  # otherwise acme.sh cannot be installed
         - install_nginx
+
+    # The passwords of postgresql users are not being stored with the 
+    # other (e.g. database) settings in the host_vars/<hostname>/vars.yaml
+    # for secure reasons. Instead the are stored in the vault of the host
+    # (host_vars/<hostname>/vault and will be merged by the following task.
+    - name: "Merge PostgreSQL users variables with passwords from vault"
+      ansible.builtin.set_fact:
+        postgresql_users: "{{ postgresql_users | default([]) + [item_u | combine(item_e)] }}"
+      loop: "{{ postgresql_users_u }}"
+      loop_control:
+        loop_var: item_u
+      vars:
+        item_e: "{{ postgresql_users_e | selectattr('name', '==', item_u.name) | first }}"
+      when: install_postgresql
+
+    - name: "Setup postgresql"
+      ansible.builtin.include_role:
+        name: "ansible-role-postgresql"
+      when:
+        - install_postgresql
+
+    - name: "Setup redis"
+      ansible.builtin.include_role:
+        name: "ansible-role-redis"
+      when:
+        - install_redis

@@ -7,3 +7,9 @@
 [submodule "roles/ansible-role-nginx"]
 	path = roles/ansible-role-nginx
 	url = https://github.com/secshellnet/ansible-role-nginx
+[submodule "roles/ansible-role-postgresql"]
+	path = roles/ansible-role-postgresql
+	url = https://github.com/geerlingguy/ansible-role-postgresql
+[submodule "roles/ansible-role-redis"]
+	path = roles/ansible-role-redis
+	url = https://github.com/geerlingguy/ansible-role-redis
