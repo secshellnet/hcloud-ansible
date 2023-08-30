@@ -64,7 +64,7 @@
     - name: "Merge PostgreSQL users variables with passwords from vault"
       ansible.builtin.set_fact:
         postgresql_users: "{{ postgresql_users | default([]) + [item_u | combine(item_e)] }}"
-      loop: "{{ postgresql_users_u }}"
+      loop: "{{ postgresql_users_u | default([]) }}"
       loop_control:
         loop_var: item_u
       vars:
