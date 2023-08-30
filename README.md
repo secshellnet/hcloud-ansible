@@ -149,8 +149,34 @@ postgresql_users_e:
   `psql -h 127.0.0.1 -U <user> <database>`
 
 ## TODO
-- run OpenSCAP and check what could be improved
-- test postgresql role
+- run OpenSCAP and check what could be improved (see openscap reports / fixes)
+  ```shell
+  # on ubuntu:
+  sudo apt install libopenscap8
+  scp -o "StrictHostKeyChecking=no" -i .keys/id_ecdsa \
+    -r ~/OpenSCAP/policies worker@[2a01:4f9:c011:a617::1]:
+
+  # on debian:
+  sudo apt install openscap-scanner
+  scp -o "StrictHostKeyChecking=no" -i .keys/id_ecdsa \
+    -r ~/OpenSCAP/policies worker@[2a01:4f9:c011:a617::1]:
+
+  # on rhel
+  sudo dnf install -y openscap-scanner scap-security-guide
+
+  oscap info /usr/share/xml/scap/ssg/content/ssg-debian11-ds.xml
+  oscap xccdf eval \
+    --profile xccdf_org.ssgproject.content_profile_standard \
+    --results-arf arf.xml \
+    --report report.html \
+    /usr/share/xml/scap/ssg/content/ssg-fedora-ds.xml  # on debian/ubuntu policies/ssg-debian11-ds.xml
+  sudo oscap xccdf \
+    generate fix \
+    --fetch-remote-resources \
+    --fix-type ansible \
+    --result-id "" \
+    arf.xml > fixes.yml
+  ```
 
 ### think about
 - (iptables/firewalld) firewall rules and/or hcloud firewall rules -> integration of hcloud would be independent of distribution -> if we want to support distros like fedora in future it would be better for now
