@@ -8,13 +8,8 @@ image: ubuntu-22.04
 enable_ipv4: false
 enable_ipv6: true
 
-# ansible-role-postgresql default host based authentication config 
-# role default uses md5 to authenticate, which is why we override it
-postgresql_hba_entries:
-  - { type: local, database: all, user: postgres, auth_method: peer }
-  - { type: local, database: all, user: all, auth_method: peer }
-  - { type: host, database: all, user: all, address: '127.0.0.1/32', auth_method: scram-sha-256 }
-  - { type: host, database: all, user: all, address: '::1/128', auth_method: scram-sha-256 }
+# ansible-role-postgresql host based authentication defaults to md5
+postgresql_auth_method: scram-sha-256
 
 # features / roles to install
 install_nginx: false

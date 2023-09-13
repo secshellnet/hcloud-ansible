@@ -1,6 +1,6 @@
 # Secure Shell Networks: [Hetzner Cloud](https://www.hetzner.com/cloud) Ansible Inventory
 
-This repository template provides a ansible inventory to manage cloud server in 
+This repository template provides an ansible inventory to manage cloud server in 
 hetzner cloud (hcloud). It performes some basic linux hardening (unattended upgrades, 
 ssh, fail2ban) and can be extended by roles or tasks to perform whatever you need.
 
@@ -147,39 +147,3 @@ postgresql_users_e:
 - Use `\c <database>` to connect to a database
 - You can also connect using tcp (like any other application): 
   `psql -h 127.0.0.1 -U <user> <database>`
-
-## TODO
-- run OpenSCAP and check what could be improved (see openscap reports / fixes)
-  ```shell
-  # on ubuntu:
-  sudo apt install libopenscap8
-  scp -o "StrictHostKeyChecking=no" -i .keys/id_ecdsa \
-    -r ~/OpenSCAP/policies worker@[2a01:4f9:c011:a617::1]:
-
-  # on debian:
-  sudo apt install openscap-scanner
-  scp -o "StrictHostKeyChecking=no" -i .keys/id_ecdsa \
-    -r ~/OpenSCAP/policies worker@[2a01:4f9:c011:a617::1]:
-
-  # on rhel
-  sudo dnf install -y openscap-scanner scap-security-guide
-
-  oscap info /usr/share/xml/scap/ssg/content/ssg-debian11-ds.xml
-  oscap xccdf eval \
-    --profile xccdf_org.ssgproject.content_profile_standard \
-    --results-arf arf.xml \
-    --report report.html \
-    /usr/share/xml/scap/ssg/content/ssg-fedora-ds.xml  # on debian/ubuntu policies/ssg-debian11-ds.xml
-  sudo oscap xccdf \
-    generate fix \
-    --fetch-remote-resources \
-    --fix-type ansible \
-    --result-id "" \
-    arf.xml > fixes.yml
-  ```
-
-### think about
-- (iptables/firewalld) firewall rules and/or hcloud firewall rules -> integration of hcloud would be independent of distribution -> if we want to support distros like fedora in future it would be better for now
-- auditd / rkhunter / AIDE / snort -> how to log it
-- disable core dumps via soft / hard limits
-- disable unused filesystems (cramfs, freevxfs, jffs2, hfs, hfsplus, udf, squashfs, dccp, rds, sctp, tips)
