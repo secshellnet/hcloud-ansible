@@ -1,0 +1,22 @@
+---
+# TODO this should work for ubuntu, check other platforms...
+- name: "Ensure clamav packages are installed"
+  ansible.builtin.package:
+    name:
+      - clamav
+      - clamav-daemon
+    state: present
+
+- name: "Update clamav database"
+  ansible.builtin.command:
+    cmd: "freshclam"
+  change_when: false
+  notify: "Restart clamav"
+
+- name: "Enable and start clamav service"
+  ansible.builtin.systemd:
+    name: clamav-freshclam
+    state: started
+    enabled: true
+    # masked: no  # TODO required?
+  become: true

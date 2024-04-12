@@ -1,0 +1,17 @@
+---
+worker_user: worker
+
+# hcloud defaults for cloud server
+server_type: cx11
+location: hel1
+image: ubuntu-22.04
+enable_ipv4: false
+enable_ipv6: true
+
+# ansible-role-postgresql host based authentication defaults to md5
+postgresql_auth_method: scram-sha-256
+
+# features / roles to install
+install_nginx: false
+install_postgresql: false
+install_redis: false

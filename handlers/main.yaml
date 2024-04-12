@@ -1,0 +1,7 @@
+---
+- name: "Restart clamav"
+  when:
+    - "'clamav' in services"
+  ansible.builtin.systemd:
+    state: restarted
+    name: clamav

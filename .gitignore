@@ -358,3 +358,5 @@ $RECYCLE.BIN/
 
 .keys/*
 !.keys/.gitkeep
+
+_examples.tar.gz

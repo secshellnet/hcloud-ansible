@@ -2,10 +2,10 @@
 
 This repository template provides an ansible inventory to manage cloud server in 
 hetzner cloud (hcloud). It performes some basic linux hardening (unattended upgrades, 
-ssh, fail2ban) and can be extended by roles or tasks to perform whatever you need.
+ssh, fail2ban, ...) and can be extended by roles or tasks to perform whatever you need.
 
 ## Getting started
-1. Create a reporitory from this template repository and clone it:
+1. Use this template to create your repository and clone it:
    ```shell
    git clone git@github.com:YOUR-USERNAME/hcloud-ansible.git
    ```
@@ -47,12 +47,26 @@ ssh, fail2ban) and can be extended by roles or tasks to perform whatever you nee
 
 7. Install the required ansible and python modules:
    ```shell
-   ansible-galaxy collection install hetzner.hcloud
-   pip3 install -r requirements.txt
+   pip3 install ansible ansible-lint passlib>=1.7.4
+   ansible-galaxy collection install community.general ansible.posix hetzner.hcloud
+   ansible-galaxy role install geerlingguy.postgresql geerlingguy.redis 
    ```
 8. Use the ansible inventory:
    ```shell
    ansible-playbook playbook.yaml
+
+   # you can also limit the playbook to one of your hosts
+   ansible-playbook playbook.yaml --limit alpha
+
+   # tags can be used to run only specific parts of a playbook
+   ansible-playbook playbook.yaml --list-tasks
+   ansible-playbook playbook.yaml --limit alpha --tags redis
+
+   # to check wether the system picks up the correct variables you can run
+   ansible-inventory --vars --graph
+
+   # make sure to lint your inventory regulary
+   ansible-lint
    ```
 9. Create a backup of the [`.keys`](./keys/) directory. It contains the key to your vault 
    and the ssh key ansible uses to connect to the cloud servers. For security reasons this 
@@ -70,6 +84,8 @@ sure to commit and push both your `inventory.yaml` and `group_vars/all/vault` fi
 - Secret: `ANSIBLE_KEYS_ALL` to the content of [`.keys/all`](./keys/all)
 
 ## Structure
+
+Even though the structure is self explaining here are some comments:
 ```shell
 hcloud-ansible
 ├── .github                      # github actions workflows
@@ -99,51 +115,6 @@ hcloud-ansible
     └── dnf-automatic.conf.j2
 ```
 
-### [ansible-role-sshd](https://github.com/secshellnet/ansible-role-sshd)
+TODO explain seq chart
 
-### [ansible-role-fail2ban](https://github.com/secshellnet/ansible-role-fail2ban)
-
-### [ansible-role-nginx](https://github.com/secshellnet/ansible-role-nginx)
-
-### [ansible-role-redis](https://github.com/geerlingguy/ansible-role-redis)
-
-### [ansible-role-postgresql](https://github.com/geerlingguy/ansible-role-postgresql)
-```yaml
-# host_vars/<hostname>/vars.yaml
----
-postgresql_databases:
-  - name: nextcloud
-    state: present
-
-  # synapse requires lc_collate and lc_ctype to be set to C
-  - name: synapse
-    lc_collate: C
-    lc_ctype: C
-    state: present
-
-postgresql_users_u:
-  - name: nextcloud
-    db: nextcloud
-    state: present
-
-  - name: synapse
-    db: synapse
-    state: present
-```
-
-```yaml
-# host_vars/<hostname>/vault
----
-postgresql_users_e:
-  - name: nextcloud
-    password: s3cr3t-p4ssw0rd
-
-  - name: synapse
-    password: s3cr3t-p4ssw0rd
-```
-
-- You can spawn a postgres shell using: `sudo -u postgres psql`.
-- Use `\l` to list databases, `\du` to list users and `\dt` to list tables.
-- Use `\c <database>` to connect to a database
-- You can also connect using tcp (like any other application): 
-  `psql -h 127.0.0.1 -U <user> <database>`
+## [Examples](./docs/EXAMPLES.md)

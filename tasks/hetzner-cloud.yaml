@@ -6,12 +6,14 @@
   run_once: true
 
 - name: "Generate new ssh key if not present"
+  when:
+    - "not ssh_key_check.stat.exists"
   ansible.builtin.command: ssh-keygen -t ecdsa -b 384 -C "ansible@localhost" -N "" -f ".keys/id_ecdsa"
-  when: not ssh_key_check.stat.exists
+  change_when: true
   run_once: true
 
 - name: "Ensure ansible ssh key exist in hetzner cloud"
-  hetzner.hcloud.hcloud_ssh_key:
+  hetzner.hcloud.ssh_key:
     api_token: "{{ hcloud_api_token }}"
 
     name: ansible
@@ -20,7 +22,7 @@
   run_once: true
 
 - name: "Gather list of hcloud servers"
-  hetzner.hcloud.hcloud_server_info:
+  hetzner.hcloud.server_info:
     api_token: "{{ hcloud_api_token }}"
   register: output
 
@@ -29,7 +31,7 @@
     existing_cloud_servers: "{{ output.hcloud_server_info | map(attribute='name') | list }}"
 
 - name: "Remove cloud server which are no longer defined in the ansible inventory"
-  hetzner.hcloud.hcloud_server:
+  hetzner.hcloud.server:
     api_token: "{{ hcloud_api_token }}"
 
     name: "{{ item.name }}"
@@ -39,7 +41,7 @@
     - "item not in ansible_play_hosts_all"
 
 - name: "Create cloud server"
-  hetzner.hcloud.hcloud_server:
+  hetzner.hcloud.server:
     api_token: "{{ hcloud_api_token }}"
 
     name: "{{ inventory_hostname }}"
@@ -56,7 +58,7 @@
     - "inventory_hostname not in existing_cloud_servers"
 
 - name: "Gather hcloud server infos"
-  hetzner.hcloud.hcloud_server_info:
+  hetzner.hcloud.server_info:
     api_token: "{{ hcloud_api_token }}"
   register: server_info
 

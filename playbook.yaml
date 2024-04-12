@@ -12,73 +12,112 @@
   hosts: all
   tasks:
     - name: "Create low privileged user account"
-      ansible.builtin.include_tasks: "tasks/create-worker-user.yaml"
+      ansible.builtin.include_tasks:
+        file: "tasks/linux/create-worker-user.yaml"
 
-    - name: "Remove labels from cloud server {{ inventory_hostname }}"
-      hetzner.hcloud.hcloud_server:
+    - name: "Remove labels from cloud server"
+      when:
+        - "new_server"
+      hetzner.hcloud.server:
         api_token: "{{ hcloud_api_token }}"
 
         name: "{{ inventory_hostname }}"
         labels: {}
 
         state: present
-      when: new_server
       delegate_to: localhost
 
     - name: "Configure sshd"
+      tags: [hardening]
       ansible.builtin.include_role:
         name: "ansible-role-sshd"
+        apply:
+          tags: [hardening]
 
     - name: "Update repositories cache on systems using apt"
+      when:
+        - "ansible_pkg_mgr == 'apt'"
       ansible.builtin.apt:
         update_cache: true
-      when: ansible_pkg_mgr == 'apt'
       changed_when: false
       become: true
 
     - name: "Install extra packages for enterprise linux"
+      when:
+        - "ansible_distribution in ['CentOS', 'AlmaLinux', 'Rocky']"
       ansible.builtin.package:
         name: epel-release
         state: present
-      when: "ansible_distribution in ['CentOS', 'AlmaLinux', 'Rocky']"
       become: true
 
     - name: "Setup fail2ban"
-      ansible.builtin.include_role:
-        name: "ansible-role-fail2ban"
+      tags: [hardening]
+      ansible.builtin.include_tasks:
+        file: "tasks/linux/setup-fail2ban.yaml"
+        apply:
+          tags: [hardening]
 
     - name: "Configure automatic updates of installed packages"
-      ansible.builtin.include_tasks: "tasks/auto-update.yaml"
+      tags: [hardening]
+      ansible.builtin.include_tasks:
+        file: "tasks/linux/setup-auto-update.yaml"
+        apply:
+          tags: [hardening]
 
-    - name: "Setup nginx"
-      ansible.builtin.include_role:
-        name: "ansible-role-nginx"
-      when:
-        - enable_ipv4  # otherwise acme.sh cannot be installed
-        - install_nginx
+    # - name: "Setup clamav"
+    #   tags: [hardening]
+    #   ansible.builtin.include_tasks:
+    #     file: "tasks/linux/setup-clamav.yaml"
+    #     apply:
+    #       tags: [hardening]
 
-    # The passwords of postgresql users are not being stored with the 
-    # other (e.g. database) settings in the host_vars/<hostname>/vars.yaml
-    # for secure reasons. Instead the are stored in the vault of the host
-    # (host_vars/<hostname>/vault and will be merged by the following task.
-    - name: "Merge PostgreSQL users variables with passwords from vault"
-      ansible.builtin.set_fact:
-        postgresql_users: "{{ postgresql_users | default([]) + [item_u | combine(item_e)] }}"
-      loop: "{{ postgresql_users_u | default([]) }}"
-      loop_control:
-        loop_var: item_u
-      vars:
-        item_e: "{{ postgresql_users_e | selectattr('name', '==', item_u.name) | first }}"
-      when: install_postgresql
+    # TODO setup local firewall rules (outgoing is more important than ingoing (because this can be controlled using the port bindings))
+    # TODO setup auditd
+    # TODO setup aide
+    # TODO setup IDS (Suricata / snort)?
+    # TODO setup LSM (e.g. selinux, apparmor)
+    # TODO setup agent / sidecar for wazuh / elastic / graylog / ... or sent at least logs via syslog but agent would be better
+    # TODO think about backup
+
+    # - name: "Audit the system using openscap"
+    #   tags: [auditing]
+    #   block:
+    # Packages on debian: openscap-scanner ssg-debian
+    # TODO openscap on each platform at least once (maybe even automaticly and download results when enabled)
 
     - name: "Setup postgresql"
-      ansible.builtin.include_role:
-        name: "ansible-role-postgresql"
       when:
-        - install_postgresql
+        - "install_postgresql"
+      tags: [postgresql]
+      block:
+        # Note: The passwords of postgresql users are not being stored with the
+        #       other (e.g. database) settings in the host_vars/<hostname>/vars.yaml
+        #       for security reasons. Instead the are stored in the vault of the host
+        #       (host_vars/<hostname>/vault) and will be merged by the following task.
+        - name: "Merge PostgreSQL users variables with passwords from vault"
+          ansible.builtin.set_fact:
+            postgresql_users: "{{ postgresql_users | default([]) + [item_u | combine(item_e)] }}"
+          loop: "{{ postgresql_users_u | default([]) }}"
+          loop_control:
+            loop_var: item_u
+          vars:
+            item_e: "{{ postgresql_users_e | selectattr('name', '==', item_u.name) | first }}"
+
+        - name: "Install postgresql using ansible-role"
+          ansible.builtin.include_role:
+            name: "geerlingguy.postgresql"
+            apply:
+              become: true
+              tags: [postgresql]
 
     - name: "Setup redis"
-      ansible.builtin.include_role:
-        name: "ansible-role-redis"
       when:
-        - install_redis
+        - "install_redis"
+      tags: [redis]
+      ansible.builtin.include_role:
+        name: "geerlingguy.redis"
+        apply:
+          become: true
+          tags: [redis]
+
+    # TODO describe how to deploy containers with applications (make an example here)
