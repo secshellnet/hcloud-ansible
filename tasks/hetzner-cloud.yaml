@@ -8,8 +8,9 @@
 - name: "Generate new ssh key if not present"
   when:
     - "not ssh_key_check.stat.exists"
-  ansible.builtin.command: ssh-keygen -t ecdsa -b 384 -C "ansible@localhost" -N "" -f ".keys/id_ecdsa"
-  change_when: true
+  ansible.builtin.command:
+    cmd: ssh-keygen -t ecdsa -b 384 -C "ansible@localhost" -N "" -f ".keys/id_ecdsa"
+  changed_when: true
   run_once: true
 
 - name: "Ensure ansible ssh key exist in hetzner cloud"

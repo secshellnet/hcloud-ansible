@@ -1,11 +1,11 @@
 ---
-- name: "Install fail2ban"
+- name: "Ensure fail2ban is installed"
   ansible.builtin.package:
     name: fail2ban
     state: present
   become: true
 
-- name: "Install python3-systemd"
+- name: "Ensure python3-systemd is installed"
   ansible.builtin.package:
     name: python3-systemd
     state: present

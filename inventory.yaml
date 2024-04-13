@@ -1,3 +1,44 @@
 ---
 all:
   hosts:
+    ubuntu:
+      server_type: cx11
+      location: hel1
+      image: ubuntu-22.04
+      enable_ipv4: false
+      enable_ipv6: true
+
+    debian:
+      server_type: cx11
+      location: hel1
+      image: debian-12
+      enable_ipv4: false
+      enable_ipv6: true
+
+    fedora:
+      server_type: cx11
+      location: hel1
+      image: fedora-39
+      enable_ipv4: false
+      enable_ipv6: true
+
+    rocky:
+      server_type: cx11
+      location: hel1
+      image: rocky-linux-9
+      enable_ipv4: false
+      enable_ipv6: true
+
+    alma:
+      server_type: cx11
+      location: hel1
+      image: almalinux-9
+      enable_ipv4: false
+      enable_ipv6: true
+
+    centos:
+      server_type: cx11
+      location: hel1
+      image: centos-stream-9
+      enable_ipv4: false
+      enable_ipv6: true

@@ -3,10 +3,14 @@
   hosts: all
   connection: local
   gather_facts: false
-
+  strategy: free
   tasks:
     - name: "Interact with hcloud to create cloud servers"
-      ansible.builtin.include_tasks: "tasks/hetzner-cloud.yaml"
+      ansible.builtin.include_tasks:
+        file: "tasks/hetzner-cloud.yaml"
+        apply:
+          tags: [always]
+      tags: [always]  # this action needs to run every single time, to add the ip addresses of the servers to the inventory
 
 - name: "Play to configure servers"
   hosts: all
@@ -42,7 +46,7 @@
       changed_when: false
       become: true
 
-    - name: "Install extra packages for enterprise linux"
+    - name: "Ensure extra packages for enterprise linux are installed"
       when:
         - "ansible_distribution in ['CentOS', 'AlmaLinux', 'Rocky']"
       ansible.builtin.package:
@@ -64,26 +68,35 @@
         apply:
           tags: [hardening]
 
-    # - name: "Setup clamav"
-    #   tags: [hardening]
-    #   ansible.builtin.include_tasks:
-    #     file: "tasks/linux/setup-clamav.yaml"
-    #     apply:
-    #       tags: [hardening]
+    - name: "Setup clamav"
+      tags: [hardening]
+      ansible.builtin.include_tasks:
+        file: "tasks/linux/setup-clamav.yaml"
+        apply:
+          tags: [hardening]
 
-    # TODO setup local firewall rules (outgoing is more important than ingoing (because this can be controlled using the port bindings))
-    # TODO setup auditd
+    # TODO Merge hetzner cloud and iptables firewall rules from felbinger.eu/ansible repository
+    #      iptables is being installed on any host using fail2ban, so just ensure it's installed
+    #      and use it. Outgoing firewall rules are more important than input rules, because they
+    #      can be controlled by the port bindings / sockets.
+
+    # TODO setup auditd (check / improve)
+
+    ### FUTURE ###
     # TODO setup aide
-    # TODO setup IDS (Suricata / snort)?
+    # TODO setup IDS (Suricata / snort)
     # TODO setup LSM (e.g. selinux, apparmor)
     # TODO setup agent / sidecar for wazuh / elastic / graylog / ... or sent at least logs via syslog but agent would be better
     # TODO think about backup
+    ### END FUTURE ###
 
     # - name: "Audit the system using openscap"
     #   tags: [auditing]
     #   block:
     # Packages on debian: openscap-scanner ssg-debian
     # TODO openscap on each platform at least once (maybe even automaticly and download results when enabled)
+
+    # TODO setup admin users (list, add keys from files using lookup and authorized_keys module)
 
     - name: "Setup postgresql"
       when:
@@ -119,5 +132,7 @@
         apply:
           become: true
           tags: [redis]
+
+    # TODO setup nginx with ModSecurity if install_nginx is true
 
     # TODO describe how to deploy containers with applications (make an example here)
