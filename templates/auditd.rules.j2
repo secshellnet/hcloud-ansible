@@ -13,7 +13,7 @@
 -w /etc/sudoers -p wa -k sudoers_changes
 
 # Monitor commands
-{% for cmd in commands %}
+{% for cmd in auditd_commands %}
 -a always,exit -F arch=b32 -S execve -C uid!=euid -F euid=0 -F path={{ cmd }} -k monitored_commands
 -a always,exit -F arch=b64 -S execve -C uid!=euid -F euid=0 -F path={{ cmd }} -k monitored_commands
 {% endfor %}

@@ -2,7 +2,7 @@
 worker_user: worker
 
 # hcloud defaults for cloud server
-server_type: cx11
+server_type: cax11  # this is arm64
 location: hel1
 image: ubuntu-22.04
 enable_ipv4: false
@@ -15,3 +15,28 @@ postgresql_auth_method: scram-sha-256
 install_nginx: false
 install_postgresql: false
 install_redis: false
+
+# commands that should trigger auditd
+auditd_commands:
+  - /usr/bin/passwd
+  - /usr/bin/wget
+  - /usr/bin/curl
+  - /usr/bin/base64
+  - /bin/nc
+  - /bin/ncat
+  - /usr/bin/ssh
+  - /usr/bin/scap
+  - /usr/bin/sftp
+  - /usr/bin/ftp
+  - /usr/bin/socat
+  - /usr/sbin/tcpdump
+  - /usr/sbin/wireshark
+  - /usr/sbin/tshark
+  - /usr/sbin/rawshark
+  - /usr/bin/rdesktop
+  - /usr/bin/nmap
+  - /usr/bin/mknod
+  - /sbin/modprobe
+  - /sbin/insmod
+  - /sbin/lsmod
+  - /sbin/rmmod

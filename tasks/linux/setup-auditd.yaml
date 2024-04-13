@@ -1,0 +1,28 @@
+---
+- name: "Ensure the audit subsystem is installed"
+  ansible.builtin.package:
+    name: "{{ (ansible_distribution in ['Ubuntu', 'Debian']) | ternary('auditd', 'audit') }}"
+    state: present
+  become: true
+  register: auditd
+
+# TODO rules doesn't get applied onto /etc/auditd/audit.rules which means they are not being used
+# TODO on rhel manual interactions with the service are not possible:
+# Unable to restart service auditd: Failed to restart auditd.service: Operation refused, unit auditd.service may be requested by dependency only (it is configured to refuse manual start/stop).\nSee system logs and 'systemctl status auditd.service' for details.
+- name: "Create audit rules file"
+  ansible.builtin.template:
+    src: auditd.rules.j2
+    dest: "/etc/audit/rules.d/audit.rules"
+    owner: root
+    group: root
+    mode: "0660"
+  notify: "Restart auditd"
+  become: true
+
+- name: "Enable and start auditd service"
+  when: auditd.changed
+  ansible.builtin.systemd:
+    name: auditd
+    state: started
+    enabled: true
+  become: true

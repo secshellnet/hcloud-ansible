@@ -1,0 +1,6 @@
+---
+- name: "Ensure rkhunter is installed"
+  ansible.builtin.package:
+    name: "rkhunter"
+    state: present
+  become: true

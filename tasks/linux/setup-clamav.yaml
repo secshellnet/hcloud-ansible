@@ -10,8 +10,10 @@
     name: "{{ (ansible_distribution in ['Ubuntu', 'Debian']) | ternary('clamav-daemon', 'clamav-freshclam') }}"
     state: present
   become: true
+  register: freshclam
 
 - name: "Update clamav database"
+  when: freshclam.changed
   block:
     - name: "Stop clamav service"
       ansible.builtin.systemd:

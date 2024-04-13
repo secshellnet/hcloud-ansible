@@ -3,7 +3,9 @@
   hosts: all
   connection: local
   gather_facts: false
-  strategy: free
+  module_defaults:
+    group/hetzner.hcloud.all:
+      api_token: "{{ hcloud_api_token }}"
   tasks:
     - name: "Interact with hcloud to create cloud servers"
       ansible.builtin.include_tasks:
@@ -14,6 +16,7 @@
 
 - name: "Play to configure servers"
   hosts: all
+  strategy: free
   tasks:
     - name: "Create low privileged user account"
       ansible.builtin.include_tasks:
@@ -31,12 +34,19 @@
         state: present
       delegate_to: localhost
 
-    - name: "Configure sshd"
+    - name: "Setup sshd"
       tags: [hardening]
-      ansible.builtin.include_role:
-        name: "ansible-role-sshd"
-        apply:
-          tags: [hardening]
+      block:
+        - name: "Setup sshd"
+          ansible.builtin.include_tasks:
+            file: "tasks/linux/setup-sshd.yaml"
+            apply:
+              tags: [hardening]
+
+        - name: "Add tcp/22 to allowed ports of hetzner firewall"
+          ansible.builtin.set_fact:
+            hetzner_firewall_rules: "{{ hetzner_firewall_rules | default([]) + [{'direction': 'in', 'protocol': 'tcp', 'source_ips': ['0.0.0.0/0', '::/0'], 'port': 22}] }}"
+          tags: [hardening, firewall]
 
     - name: "Update repositories cache on systems using apt"
       when:
@@ -61,7 +71,7 @@
         apply:
           tags: [hardening]
 
-    - name: "Configure automatic updates of installed packages"
+    - name: "Setup automatic updates of installed packages"
       tags: [hardening]
       ansible.builtin.include_tasks:
         file: "tasks/linux/setup-auto-update.yaml"
@@ -75,12 +85,27 @@
         apply:
           tags: [hardening]
 
-    # TODO Merge hetzner cloud and iptables firewall rules from felbinger.eu/ansible repository
-    #      iptables is being installed on any host using fail2ban, so just ensure it's installed
-    #      and use it. Outgoing firewall rules are more important than input rules, because they
-    #      can be controlled by the port bindings / sockets.
+    - name: "Setup rkhunter"
+      tags: [hardening]
+      ansible.builtin.include_tasks:
+        file: "tasks/linux/setup-rkhunter.yaml"
+        apply:
+          tags: [hardening]
 
-    # TODO setup auditd (check / improve)
+    - name: "Configure iptables"
+      ansible.builtin.include_tasks:
+        file: "tasks/linux/setup-iptables.yaml"
+        apply:
+          tags: [hardening, firewall]
+      tags: [hardening, firewall]
+
+    - name: "Setup auditd"
+      when: ansible_distribution in ['CentOS', 'AlmaLinux', 'Rocky']  # TODO until bugs fixed
+      tags: [hardening]
+      ansible.builtin.include_tasks:
+        file: "tasks/linux/setup-auditd.yaml"
+        apply:
+          tags: [hardening]
 
     ### FUTURE ###
     # TODO setup aide
@@ -90,13 +115,27 @@
     # TODO think about backup
     ### END FUTURE ###
 
-    # - name: "Audit the system using openscap"
-    #   tags: [auditing]
-    #   block:
-    # Packages on debian: openscap-scanner ssg-debian
-    # TODO openscap on each platform at least once (maybe even automaticly and download results when enabled)
+    - name: "Create users"
+      tags: [users]
+      ansible.builtin.include_tasks:
+        file: "tasks/linux/create-users.yaml"
+        apply:
+          tags: [users]
 
-    # TODO setup admin users (list, add keys from files using lookup and authorized_keys module)
+    - name: "Audit the system using openscap"
+      tags: [audit]
+      when: "ansible_distribution not in ['Ubuntu', 'Debian']"  # TODO ssg files does not exist -> find solution
+      ansible.builtin.include_tasks:
+        file: "tasks/linux/audit-openscap.yaml"
+        apply:
+          tags: [audit]
+
+    - name: "Audit the system using lynis"
+      tags: [audit]
+      ansible.builtin.include_tasks:
+        file: "tasks/linux/audit-lynis.yaml"
+        apply:
+          tags: [audit]
 
     - name: "Setup postgresql"
       when:
@@ -133,6 +172,57 @@
           become: true
           tags: [redis]
 
-    # TODO setup nginx with ModSecurity if install_nginx is true
+    # TODO setup nginx with ModSecurity if install_nginx is true: 
+    # debian: libnginx-mod-http-modsecurity modsecurity-crs
+    # rhel: libmodsecurity nginx-mod-modsecurity
+    # ubuntu: modsecurity-crs libmodsecurity3
 
     # TODO describe how to deploy containers with applications (make an example here)
+
+  post_tasks:
+    - name: "Configure hetzner firewall"
+      tags: [hardening, firewall]
+      block:
+        - name: "Add icmp to allowed protocols for incomming connections of hetzner firewall"
+          ansible.builtin.set_fact:
+            hetzner_firewall_rules: "{{ hetzner_firewall_rules | default([]) + [{'direction': 'in', 'source_ips': ['0.0.0.0/0', '::/0'], 'protocol': 'icmp'}] }}"
+
+        - name: "Add icmp to allowed protocols for incomming connections of hetzner firewall"
+          ansible.builtin.set_fact:
+            hetzner_firewall_rules: "{{ hetzner_firewall_rules | default([]) + [{'direction': 'out', 'destination_ips': ['0.0.0.0/0', '::/0'], 'protocol': 'icmp'}] }}"
+
+        - name: "Add dns to allowed protocols for outgoing connections of hetzner firewall"
+          ansible.builtin.set_fact:
+            hetzner_firewall_rules: "{{ hetzner_firewall_rules | default([]) + [{'direction': 'out', 'destination_ips': ['0.0.0.0/0', '::/0'], 'protocol': 'udp', 'port': '53'}] }}"
+
+        - name: "Allow ntp for outgoing connections on hetzner firewall"
+          ansible.builtin.set_fact:
+            hetzner_firewall_rules: "{{ hetzner_firewall_rules | default([]) + [{'direction': 'out', 'destination_ips': ['0.0.0.0/0', '::/0'], 'protocol': 'udp', 'port': '123'}] }}"
+
+        - name: "Allow http for outgoing connections on hetzner firewall"
+          ansible.builtin.set_fact:
+            hetzner_firewall_rules: "{{ hetzner_firewall_rules | default([]) + [{'direction': 'out', 'destination_ips': ['0.0.0.0/0', '::/0'], 'protocol': 'tcp', 'port': '80'}] }}"
+
+        - name: "Allow https for outgoing connections on hetzner firewall"
+          ansible.builtin.set_fact:
+            hetzner_firewall_rules: "{{ hetzner_firewall_rules | default([]) + [{'direction': 'out', 'destination_ips': ['0.0.0.0/0', '::/0'], 'protocol': 'tcp', 'port': '443'}] }}"
+
+        - name: "Adjust hetzner firewall"
+          hetzner.hcloud.firewall:
+            api_token: "{{ hcloud_api_token }}"
+
+            name: "fw-{{ inventory_hostname }}"
+            state: present
+            rules: "{{ hetzner_firewall_rules | default([]) }}"
+          delegate_to: localhost
+
+        - name: "Apply firewall onto cloud server"
+          hetzner.hcloud.server:
+            api_token: "{{ hcloud_api_token }}"
+
+            name: "{{ inventory_hostname }}"
+            firewalls:
+              - "fw-{{ inventory_hostname }}"
+
+            state: present
+          delegate_to: localhost

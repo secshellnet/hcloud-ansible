@@ -15,8 +15,6 @@
 
 - name: "Ensure ansible ssh key exist in hetzner cloud"
   hetzner.hcloud.ssh_key:
-    api_token: "{{ hcloud_api_token }}"
-
     name: ansible
     public_key: "{{ lookup('file', '.keys/id_ecdsa.pub') }}"
     state: present
@@ -24,27 +22,34 @@
 
 - name: "Gather list of hcloud servers"
   hetzner.hcloud.server_info:
-    api_token: "{{ hcloud_api_token }}"
   register: output
 
 - name: "Map response of hcloud_server_info to list of server names"
   ansible.builtin.set_fact:
     existing_cloud_servers: "{{ output.hcloud_server_info | map(attribute='name') | list }}"
 
+# TODO add confirmation of user to delete the server (prompt)
 - name: "Remove cloud server which are no longer defined in the ansible inventory"
   hetzner.hcloud.server:
-    api_token: "{{ hcloud_api_token }}"
-
-    name: "{{ item.name }}"
+    name: "{{ item }}"
     state: absent
   with_items: "{{ existing_cloud_servers }}"
+  run_once: true
   when:
-    - "item not in ansible_play_hosts_all"
+    - "item not in groups['all']"
+  changed_when: false
+
+- name: "Remove firewall for cloud servers which are no longer defined in the ansible inventory"
+  hetzner.hcloud.firewall:
+    name: "fw-{{ inventory_hostname }}"
+    state: absent
+  with_items: "{{ existing_cloud_servers }}"
+  run_once: true
+  when:
+    - "item not in groups['all']"
 
 - name: "Create cloud server"
   hetzner.hcloud.server:
-    api_token: "{{ hcloud_api_token }}"
-
     name: "{{ inventory_hostname }}"
     server_type: "{{ server_type }}"
     location: "{{ location }}"
@@ -60,7 +65,6 @@
 
 - name: "Gather hcloud server infos"
   hetzner.hcloud.server_info:
-    api_token: "{{ hcloud_api_token }}"
   register: server_info
 
 - name: "Filter the output from hcloud to have only the needed data"

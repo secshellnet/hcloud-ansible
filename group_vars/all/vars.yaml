@@ -1,6 +1,8 @@
 ---
 worker_user: ansible
 
+users: ["nicof2000"]
+
 # fail2ban configuration for sshd jail
 f2b_sshd_findtime: 30m
 f2b_sshd_maxretry: 3

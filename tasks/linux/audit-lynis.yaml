@@ -1,0 +1,8 @@
+---
+- name: "Ensure lynis is installed"
+  ansible.builtin.package:
+    name: "lynis"
+    state: present
+  become: true
+
+# TODO

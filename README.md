@@ -118,3 +118,11 @@ hcloud-ansible
 TODO explain seq chart
 
 ## [Examples](./docs/EXAMPLES.md)
+
+A full list of available system images can be aquired using the following command:
+```
+curl -s -H "Authorization: Bearer $TOKEN" \
+  "https://api.hetzner.cloud/v1/images" \
+  | jq -r '.images[] | select(.type == "system") | .name'
+```
+TODO: For whatever reason neighter fedora nor alma linux is available in this list

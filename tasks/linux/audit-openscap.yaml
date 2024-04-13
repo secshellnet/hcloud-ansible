@@ -1,0 +1,61 @@
+---
+- name: "Ensure openscap is installed"
+  ansible.builtin.package:
+    name: "{{ (ansible_distribution in ['Ubuntu']) | ternary('libopenscap8', 'openscap-scanner') }}"
+    state: present
+  become: true
+
+- name: "Ensure scap security guide is installed"
+  when:
+    - "ansible_distribution not in ['Ubuntu']"  # TODO how to install?
+  ansible.builtin.package:
+    name: "{{ (ansible_distribution in ['Debian']) | ternary('ssg-debian', 'scap-security-guide') }}"  # TODO doesn't contain debian-12 version... probally requires adding newer mirror
+    state: present
+  become: true
+
+- name: "Set scap security guide to use as fact for next task"
+  ansible.builtin.set_fact:
+    ssg_file: >-
+      {%- set mappings = {
+        "AlmaLinux": "ssg-almalinux9-ds.xml",
+        "Rocky": "ssg-rl9-ds.xml",
+        "Fedora": "ssg-fedora-ds.xml",
+        "CentOS": "ssg-cs9-ds.xml",
+        "Ubuntu": "ssg-ubuntu2204-ds.xml",
+        "Debian": "ssg-debian12-ds.xml"
+      } -%}
+      /usr/share/xml/scap/ssg/content/{{ mappings[ansible_distribution] }}
+    ssg_profile: >-
+      {%- set mappings = {
+        "AlmaLinux": "xccdf_org.ssgproject.content_profile_anssi_bp28_enhanced",
+        "Rocky": "xccdf_org.ssgproject.content_profile_anssi_bp28_enhanced",
+        "Fedora": "xccdf_org.ssgproject.content_profile_standard",
+        "CentOS": "xccdf_org.ssgproject.content_profile_anssi_bp28_enhanced",
+        "Ubuntu": "xccdf_org.ssgproject.content_profile_standard",
+        "Debian": "xccdf_org.ssgproject.content_profile_standard"
+      } -%}
+      {{ mappings[ansible_distribution] }}
+
+#- name: "Audit system using openscap"
+#  ansible.builtin.command: |
+#    oscap xccdf eval \
+#      --profile {{ ssg_profile }} \
+#      --skip-rule "xccdf_org.ssgproject.content_rule_package_ntp_installed" \
+#      --skip-rule "xccdf_org.ssgproject.content_rule_partition_for_home" \
+#      --skip-rule "xccdf_org.ssgproject.content_rule_partition_for_tmp" \
+#      --skip-rule "xccdf_org.ssgproject.content_rule_partition_for_var" \
+#      --skip-rule "xccdf_org.ssgproject.content_rule_partition_for_var_log" \
+#      --skip-rule "xccdf_org.ssgproject.content_rule_partition_for_var_log_audit" \
+#      --results-arf /tmp/arf.xml \
+#      --report /tmp/report.html \
+#      {{ ssg_file }}
+#  ignore_errors: true  # openscap exists with errors when it finds something to improve
+
+#- name: "Fetch openscap report"
+#  ansible.builtin.fetch:
+#    src: /tmp/"{{ item }}"
+#    dest: /tmp/openscap-{{ inventory_hostname }}-{{ item }}
+#    flat: true
+#  with_items:
+#    - "arf.xml"
+#    - "report.html"

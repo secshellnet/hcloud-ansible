@@ -1,0 +1,98 @@
+---
+- name: "Ensure openssh-server is installed"
+  ansible.builtin.package:
+    name:
+      - openssh-server
+    state: present
+  become: true
+
+- name: "Disable ssh root login"
+  ansible.builtin.lineinfile:
+    path: "/etc/ssh/sshd_config"
+    regexp: "^#?PermitRootLogin"
+    line: "PermitRootLogin no"
+  notify: "Restart sshd"
+  become: true
+
+- name: "Disable ssh empty password"
+  ansible.builtin.lineinfile:
+    path: "/etc/ssh/sshd_config"
+    regexp: "^#?PermitEmptyPasswords"
+    line: "PermitEmptyPasswords no"
+  notify: "Restart sshd"
+  become: true
+
+- name: "Disable ssh password authentication"
+  ansible.builtin.lineinfile:
+    path: "/etc/ssh/sshd_config"
+    regexp: "^#?PasswordAuthentication"
+    line: "PasswordAuthentication no"
+  notify: "Restart sshd"
+  become: true
+
+- name: "Configure ssh to disconnect unresponsive ssh client after 10 minutes"
+  block:
+    - name: "Set ClientAliveInterval"
+      ansible.builtin.lineinfile:
+        path: "/etc/ssh/sshd_config"
+        regexp: "^#?ClientAliveInterval"
+        line: "ClientAliveInterval 300"  # 5 min
+      notify: "Restart sshd"
+      become: true
+
+    - name: "Set ClientAliveCountMax"
+      ansible.builtin.lineinfile:
+        path: "/etc/ssh/sshd_config"
+        regexp: "^#?ClientAliveCountMax"
+        line: "ClientAliveCountMax 0"
+      notify: "Restart sshd"
+      become: true
+
+- name: "Disable ssh tcp forwarding"
+  ansible.builtin.lineinfile:
+    path: "/etc/ssh/sshd_config"
+    regexp: "^#?AllowTcpForwarding"
+    line: "AllowTcpForwarding no"
+  notify: "Restart sshd"
+  become: true
+
+- name: "Disable ssh tunneling"
+  ansible.builtin.lineinfile:
+    path: "/etc/ssh/sshd_config"
+    regexp: "^#?PermitTunnel"
+    line: "PermitTunnel no"
+  notify: "Restart sshd"
+  become: true
+
+- name: "Disable ssh gateway ports"
+  ansible.builtin.lineinfile:
+    path: "/etc/ssh/sshd_config"
+    regexp: "^#?GatewayPorts"
+    line: "GatewayPorts no"
+  notify: "Restart sshd"
+  become: true
+
+- name: "Disable ssh x11 forwarding"
+  ansible.builtin.lineinfile:
+    path: "/etc/ssh/sshd_config"
+    regexp: "^#?X11Forwarding"
+    line: "X11Forwarding no"
+  notify: "Restart sshd"
+  become: true
+
+- name: "Create netbox service for ssh"
+  netbox.netbox.netbox_service:
+    netbox_url: "{{ netbox_url }}"
+    netbox_token: "{{ netbox_token }}"
+    data:
+      virtual_machine: "{{ inventory_hostname }}"
+      name: ssh
+      port: 22
+      protocol: TCP
+    state: present
+  delegate_to: localhost
+  when:
+    - "netbox_url is defined"
+    - "netbox_token is defined"
+    - "netbox_url is not none"
+    - "netbox_token is not none"
