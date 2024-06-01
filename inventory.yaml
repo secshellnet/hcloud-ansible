@@ -17,9 +17,9 @@ all:
 #      server_type: cax11
 #      image: rocky-9
 
-    alma:
-      server_type: cax11
-      image: alma-9
+#    alma:
+#      server_type: cax11
+#      image: alma-9
 
 #    centos:
 #      server_type: cax11

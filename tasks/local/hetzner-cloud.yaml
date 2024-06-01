@@ -54,7 +54,7 @@
   when: server_info.ipv4_address is defined or server_info.ipv6 is defined
   ansible.builtin.add_host:
     name: "{{ item }}"
-    ansible_host: "{{ (server_info.ipv6 | ansible.netcommon.ipmath(1)) | default(server_info.ipv4_address) }}"
+    ansible_host: "{{ ipv6_address | default(server_info.ipv4_address) }}"
     ansible_user: "{{ ('new' in server_info.labels) | ternary('root', worker_user) }}"
     ansible_sudo_pass: "{{ worker_password }}"
     groups: ["all"]
@@ -64,6 +64,8 @@
     # this contains multiple entries, which we need to filter by the hostname 
     # (item), before we can access ipv6 and ipv6_address on it.
     server_info: "{{ output.hcloud_server_info | selectattr('name', 'equalto', item) | first }}"
+    # ipmath module requires a valid ip net to operate
+    ipv6_address: "{{ server_info.ipv6 | ansible.utils.ipmath(1)) if server_info.ipv6 != '' else '' }}"
   loop: "{{ vars['groups']['all'] }}"
   changed_when: false
 
