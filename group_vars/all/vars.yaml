@@ -1,17 +1,9 @@
 ---
-worker_user: worker
+worker_user: ansible
 
-# hcloud defaults for cloud server
-server_type: cx11
-location: hel1
-image: ubuntu-22.04
-enable_ipv4: false
-enable_ipv6: true
+users: ["nicof2000"]
 
-# ansible-role-postgresql host based authentication defaults to md5
-postgresql_auth_method: scram-sha-256
-
-# features / roles to install
-install_nginx: false
-install_postgresql: false
-install_redis: false
+# fail2ban configuration for sshd jail
+f2b_sshd_findtime: 30m
+f2b_sshd_maxretry: 3
+f2b_sshd_bantime: 1d

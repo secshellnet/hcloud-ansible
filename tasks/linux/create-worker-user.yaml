@@ -1,5 +1,5 @@
 ---
-- name: "Create low privileged unix user account {{ worker_user }}"
+- name: "Create low privileged user account"
   ansible.builtin.user:
     name: "{{ worker_user }}"
     groups: "{{ (ansible_distribution in ['Ubuntu', 'Debian']) | ternary('sudo', 'wheel') }}"
@@ -7,14 +7,20 @@
     shell: "/bin/bash"
   become: true
 
-- name: "Set password for low priviledged unix user account {{ worker_user }}"
+# Note: The password of the low privileged user account will only
+#       be set, when ansible is ran for the first time (hetzner cloud
+#       label `new_server` is set). That's because the hash, generated
+#       by ansible differs every single time the task is being executed,
+#       due to a random salt.
+- name: "Set password for low priviledged user account"
   ansible.builtin.user:
     name: "{{ worker_user }}"
+    # see https://docs.ansible.com/ansible/latest/collections/ansible/builtin/password_hash_filter.html
     password: "{{ worker_password | password_hash('sha512') }}"
     password_lock: false
   when: new_server
 
-- name: "Ensure .ssh directory exists for {{ worker_user }}"
+- name: "Ensure .ssh directory exists for low privileged user account"
   ansible.builtin.file:
     state: directory
     path: "/home/{{ worker_user }}/.ssh/"
@@ -23,7 +29,7 @@
     mode: "0700"
   become: true
 
-- name: "Copy ssh key of ansible to {{ worker_user }}"
+- name: "Ensure ansible's public ssh key is added to low privileged user account"
   ansible.builtin.copy:
     src: ".keys/id_ecdsa.pub"
     dest: "/home/{{ worker_user }}/.ssh/authorized_keys"

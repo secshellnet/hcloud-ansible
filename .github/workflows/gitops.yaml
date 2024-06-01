@@ -39,8 +39,8 @@ jobs:
 
           echo "${{ secrets.ANSIBLE_KEYS_ALL }}" > .keys/all
 
-          git submodule update
-          ansible-galaxy collection install hetzner.hcloud
+          ansible-galaxy collection install hetzner.hcloud community.general ansible.posix
+          ansible-galaxy role install geerlingguy.postgresql geerlingguy.redis
           /opt/pipx/venvs/ansible-core/bin/python -m pip install -r requirements.txt
 
           # not quiet sure why, but we need this package in this python environment

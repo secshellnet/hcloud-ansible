@@ -1,0 +1,23 @@
+# Ansible managed: Do NOT modify this section manually
+
+# Remove existing rules
+-D
+
+# Set auditd to write logs to /var/log/audit/audit.log
+-w /var/log/audit/audit.log -k audit_log
+
+# Monitor changes to system files and directories
+-w /etc/passwd -p wa -k identity_changes
+-w /etc/shadow -p wa -k identity_changes
+-w /etc/group -p wa -k identity_changes
+-w /etc/sudoers -p wa -k sudoers_changes
+
+# Monitor commands
+{% for cmd in auditd_commands %}
+-a always,exit -F arch=b32 -S execve -C uid!=euid -F euid=0 -F path={{ cmd }} -k monitored_commands
+-a always,exit -F arch=b64 -S execve -C uid!=euid -F euid=0 -F path={{ cmd }} -k monitored_commands
+{% endfor %}
+
+# Always include this rule to collect exit status information
+-a always,exit -F arch=b32 -S execve -C uid!=euid -F euid=0 -k auditd_exit
+-a always,exit -F arch=b64 -S execve -C uid!=euid -F euid=0 -k auditd_exit

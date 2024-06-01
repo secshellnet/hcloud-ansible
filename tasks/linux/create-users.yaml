@@ -1,0 +1,14 @@
+---
+- name: Ensure user accounts exist
+  ansible.builtin.user:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ users | default([]) }}"
+  become: true
+
+- name: Add SSH keys for each user
+  ansible.builtin.authorized_key:
+    user: "{{ item }}"
+    key: "{{ lookup('file', 'ssh/' + item + '.pub' ) }}"
+  loop: "{{ users | default([]) }}"
+  become: true

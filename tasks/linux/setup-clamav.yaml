@@ -1,0 +1,35 @@
+---
+- name: "Ensure clamav is installed"
+  ansible.builtin.package:
+    name: clamav
+    state: present
+  become: true
+
+- name: "Ensure freshclam is installed"
+  ansible.builtin.package:
+    name: "{{ (ansible_distribution in ['Ubuntu', 'Debian']) | ternary('clamav-daemon', 'clamav-freshclam') }}"
+    state: present
+  become: true
+  register: freshclam
+
+- name: "Update clamav database"
+  when: freshclam.changed
+  block:
+    - name: "Stop clamav service"
+      ansible.builtin.systemd:
+        name: clamav-freshclam
+        state: stopped
+      become: true
+
+    - name: "Update clamav database"
+      ansible.builtin.command:
+        cmd: "freshclam"
+      changed_when: false
+      become: true
+
+    - name: "Enable and start clamav service"
+      ansible.builtin.systemd:
+        name: clamav-freshclam
+        state: started
+        enabled: true
+      become: true

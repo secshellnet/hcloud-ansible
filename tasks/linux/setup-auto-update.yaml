@@ -1,15 +1,15 @@
 ---
-- name: "Install unattended upgrades"
+- name: "Ensure unattended upgrades is installed"
   ansible.builtin.package:
     name: unattended-upgrades
     state: present
   when: ansible_pkg_mgr == 'apt'
   become: true
 
-- name: "Install dnf-automatic"
+- name: "Setup dnf-automatic"
   when: ansible_pkg_mgr == 'dnf'
   block:
-    - name: "Install dnf-automatic"
+    - name: "Ensure dnf-automatic is installed"
       ansible.builtin.package:
         name: dnf-automatic
         state: present

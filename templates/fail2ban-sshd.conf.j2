@@ -1,0 +1,7 @@
+[sshd]
+enabled = true
+backend = systemd
+
+findtime = {{ f2b_sshd_findtime | default("10m") }}
+maxretry = {{ f2b_sshd_maxretry | default("6") }}
+bantime = {{ f2b_sshd_bantime | default("1d") }}
