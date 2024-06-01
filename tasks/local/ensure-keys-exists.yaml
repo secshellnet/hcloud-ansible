@@ -1,0 +1,21 @@
+---
+- name: "Check if ssh key exists in .keys/id_ecdsa"
+  ansible.builtin.stat:
+    path: ".keys/id_ecdsa"
+  register: ssh_key_check
+  run_once: true
+
+- name: "Generate new ssh key if not present"
+  when:
+    - "not ssh_key_check.stat.exists"
+  ansible.builtin.command:
+    cmd: ssh-keygen -t ecdsa -b 384 -C "ansible@localhost" -N "" -f ".keys/id_ecdsa"
+  changed_when: true
+  run_once: true
+
+- name: "Ensure ansible ssh key exist in hetzner cloud"
+  hetzner.hcloud.ssh_key:
+    name: ansible
+    public_key: "{{ lookup('file', '.keys/id_ecdsa.pub') }}"
+    state: present
+  run_once: true

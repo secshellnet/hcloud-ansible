@@ -17,13 +17,10 @@ all:
 #      server_type: cax11
 #      image: rocky-9
 
-#    alma:
-#      server_type: cax11
-#      image: alma-9
+    alma:
+      server_type: cax11
+      image: alma-9
 
 #    centos:
 #      server_type: cax11
 #      image: centos-stream-9
-  vars:
-    # only during development:
-    ansible_ssh_common_args: '-o "StrictHostKeyChecking=no"'

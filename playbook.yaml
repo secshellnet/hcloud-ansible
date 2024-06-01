@@ -1,22 +1,42 @@
 ---
 - name: "Play to create hetzner cloud servers"
-  hosts: all
+  hosts: localhost
   connection: local
   gather_facts: false
   module_defaults:
     group/hetzner.hcloud.all:
       api_token: "{{ hcloud_api_token }}"
   tasks:
-    - name: "Interact with hcloud to create cloud servers"
+    - name: "Ensure local ssh key exists"
       ansible.builtin.include_tasks:
-        file: "tasks/hetzner-cloud.yaml"
+        file: "tasks/local/ensure-keys-exists.yaml"
+
+    # The interaction with hetzner cloud needs to be done always,
+    # because it sets the ip address for the cloud server.
+    - name: "Interact with hetzner cloud"
+      ansible.builtin.include_tasks:
+        file: "tasks/local/hetzner-cloud.yaml"
         apply:
           tags: [always]
-      tags: [always]  # this action needs to run every single time, to add the ip addresses of the servers to the inventory
+      tags: [always]
 
 - name: "Play to configure servers"
   hosts: all
   strategy: free
+  handlers:
+    - name: "Restart sshd"
+      ansible.builtin.systemd:
+        name: sshd
+        state: restarted
+      become: true
+
+    - name: "Restart auditd"
+      when: "ansible_distribution not in ['AlmaLinux']"  # TODO doesn't work
+      ansible.builtin.systemd:
+        name: auditd
+        state: restarted
+      become: true
+
   tasks:
     - name: "Create low privileged user account"
       ansible.builtin.include_tasks:
@@ -107,13 +127,11 @@
         apply:
           tags: [hardening]
 
-    ### FUTURE ###
     # TODO setup aide
     # TODO setup IDS (Suricata / snort)
     # TODO setup LSM (e.g. selinux, apparmor)
-    # TODO setup agent / sidecar for wazuh / elastic / graylog / ... or sent at least logs via syslog but agent would be better
+    # TODO setup agent: wazuh agent / filebeat / splunk universal forwarder
     # TODO think about backup
-    ### END FUTURE ###
 
     - name: "Create users"
       tags: [users]
@@ -173,11 +191,9 @@
           tags: [redis]
 
     # TODO setup nginx with ModSecurity if install_nginx is true: 
-    # debian: libnginx-mod-http-modsecurity modsecurity-crs
-    # rhel: libmodsecurity nginx-mod-modsecurity
-    # ubuntu: modsecurity-crs libmodsecurity3
-
-    # TODO describe how to deploy containers with applications (make an example here)
+    # - debian: libnginx-mod-http-modsecurity modsecurity-crs
+    # - ubuntu: modsecurity-crs libmodsecurity3
+    # - rhel:   libmodsecurity nginx-mod-modsecurity
 
   post_tasks:
     - name: "Configure hetzner firewall"
