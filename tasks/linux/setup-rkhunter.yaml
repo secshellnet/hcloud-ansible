@@ -1,5 +1,6 @@
 ---
 - name: "Ensure rkhunter is installed"
+  when: "ansible_facts['distribution'] not in ['AlmaLinux']"
   ansible.builtin.package:
     name: "rkhunter"
     state: present

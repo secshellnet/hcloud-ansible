@@ -1,5 +1,6 @@
 ---
 - name: "Ensure lynis is installed"
+  when: "ansible_facts['distribution'] not in ['AlmaLinux']"
   ansible.builtin.package:
     name: "lynis"
     state: present
