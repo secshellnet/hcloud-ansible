@@ -140,20 +140,20 @@
         apply:
           tags: [users]
 
-    - name: "Audit the system using openscap"
-      tags: [audit]
-      when: "ansible_facts['distribution'] not in ['Ubuntu', 'Debian']"  # TODO ssg files does not exist -> find solution
-      ansible.builtin.include_tasks:
-        file: "tasks/linux/audit-openscap.yaml"
-        apply:
-          tags: [audit]
+    #- name: "Audit the system using openscap"
+    #  tags: [audit]
+    #  when: "ansible_facts['distribution'] not in ['Ubuntu', 'Debian']"  # TODO ssg files does not exist -> find solution
+    #  ansible.builtin.include_tasks:
+    #    file: "tasks/linux/audit-openscap.yaml"
+    #    apply:
+    #      tags: [audit]
 
-    - name: "Audit the system using lynis"
-      tags: [audit]
-      ansible.builtin.include_tasks:
-        file: "tasks/linux/audit-lynis.yaml"
-        apply:
-          tags: [audit]
+    #- name: "Audit the system using lynis"
+    #  tags: [audit]
+    #  ansible.builtin.include_tasks:
+    #    file: "tasks/linux/audit-lynis.yaml"
+    #    apply:
+    #      tags: [audit]
 
     - name: "Setup postgresql"
       when:
