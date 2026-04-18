@@ -31,7 +31,7 @@
       become: true
 
     - name: "Restart auditd"
-      when: "ansible_facts['distribution'] not in ['AlmaLinux']"  # TODO doesn't work
+      when: "ansible_facts['distribution'] not in ['AlmaLinux','CentOS']"
       ansible.builtin.systemd:
         name: auditd
         state: restarted
