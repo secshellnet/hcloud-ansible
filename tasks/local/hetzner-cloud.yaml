@@ -9,7 +9,7 @@
 
 - name: "Determine cloud servers that are no longer defined in the ansible inventory"
   ansible.builtin.set_fact:
-    discardable: "{{ existing_cloud_servers | difference(vars['groups']['all']) }}"
+    discardable: "{{ existing_cloud_servers | difference(lookup('vars', 'groups')['all']) }}"
 
 - name: "Prompt user for confirmation before server deletion"
   when:
@@ -35,16 +35,16 @@
     - "item not in existing_cloud_servers"
   hetzner.hcloud.server:
     name: "{{ item }}"
-    server_type: "{{ vars['hostvars'][item]['server_type'] }}"
-    location: "{{ vars['hostvars'][item]['location'] }}"
-    image: "{{ vars['hostvars'][item]['image'] }}"
+    server_type: "{{ lookup('vars', 'hostvars')[item]['server_type'] }}"
+    location: "{{ lookup('vars', 'hostvars')[item]['location'] }}"
+    image: "{{ lookup('vars', 'hostvars')[item]['image'] }}"
     ssh_keys: ["ansible"]
-    enable_ipv4: "{{ vars['hostvars'][item]['enable_ipv4'] }}"
-    enable_ipv6: "{{ vars['hostvars'][item]['enable_ipv6'] }}"
+    enable_ipv4: "{{ lookup('vars', 'hostvars')[item]['enable_ipv4'] }}"
+    enable_ipv6: "{{ lookup('vars', 'hostvars')[item]['enable_ipv6'] }}"
     labels: {"new": ""}
 
     state: present
-  loop: "{{ vars['groups']['all'] }}"
+  loop: "{{ lookup('vars', 'groups')['all'] }}"
 
 - name: "Gather hcloud server infos"
   hetzner.hcloud.server_info:
@@ -66,7 +66,7 @@
     server_info: "{{ output.hcloud_server_info | selectattr('name', 'equalto', item) | first }}"
     # ipmath module requires a valid ip net to operate
     ipv6_address: "{{ server_info.ipv6 | ansible.utils.ipmath(1)) if server_info.ipv6 != '' else '' }}"
-  loop: "{{ vars['groups']['all'] }}"
+  loop: "{{ lookup('vars', 'groups')['all'] }}"
   changed_when: false
 
 - name: "Waiting for cloud server creation"
