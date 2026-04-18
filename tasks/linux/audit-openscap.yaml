@@ -18,11 +18,11 @@
     ssg_file: >-
       {%- set mappings = {
         "AlmaLinux": "ssg-almalinux9-ds.xml",
-        "Rocky": "ssg-rl9-ds.xml",
+        "Rocky": "ssg-rl10-ds.xml",
         "Fedora": "ssg-fedora-ds.xml",
-        "CentOS": "ssg-cs9-ds.xml",
-        "Ubuntu": "ssg-ubuntu2204-ds.xml",
-        "Debian": "ssg-debian12-ds.xml"
+        "CentOS": "ssg-cs10-ds.xml",
+        "Ubuntu": "ssg-ubuntu2404-ds.xml",
+        "Debian": "ssg-debian13-ds.xml"
       } -%}
       /usr/share/xml/scap/ssg/content/{{ mappings[ansible_distribution] }}
     ssg_profile: >-

@@ -31,17 +31,17 @@ Next you need to extend your inventory, for example like this:
 ```yaml
 ---
 all:
-   hosts:
-      server1:   # default settings if no configuration given
-      server_type: cx11
+  hosts:
+    server1:   # default settings if no configuration given
+      server_type: cx23
       location: hel1
-      image: ubuntu-22.04
+      image: ubuntu-24.04
       enable_ipv4: false
       enable_ipv6: true
-      server2:
-      server_type: cx21
+    server2:
+      server_type: cx33
       location: fsn1
-      image: debian-12
+      image: debian-13
       enable_ipv4: true
       enable_ipv6: true
 ```

@@ -2,9 +2,9 @@
 worker_user: worker
 
 # hcloud defaults for cloud server
-server_type: cax11  # this is arm64
+server_type: cx23
 location: hel1
-image: ubuntu-22.04
+image: ubuntu-24.04
 enable_ipv4: false
 enable_ipv6: true
 

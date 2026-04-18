@@ -2,25 +2,25 @@
 all:
   hosts:
 #    ubuntu:
-#      server_type: cax11
-#      image: ubuntu-22.04
+#      server_type: cx23
+#      image: ubuntu-24.04
 
 #    debian:
-#      server_type: cax11
-#      image: debian-12
+#      server_type: cx23
+#      image: debian-13
 
 #    fedora:
-#      server_type: cax11
-#      image: fedora-39
+#      server_type: cx23
+#      image: fedora-43
 
 #    rocky:
-#      server_type: cax11
-#      image: rocky-9
+#      server_type: cx23
+#      image: rocky-10
 
 #    alma:
-#      server_type: cax11
-#      image: alma-9
+#      server_type: cx23
+#      image: alma-10
 
 #    centos:
-#      server_type: cax11
-#      image: centos-stream-9
+#      server_type: cx23
+#      image: centos-stream-10
