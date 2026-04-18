@@ -104,11 +104,8 @@ hcloud-ansible
 │       └── vault                # encrypted global variables (e. g. hetzner cloud api token)
 ├── inventory.yaml
 ├── playbook.yaml
-├── roles
-│   ├── ansible-role-fail2ban
-│   ├── ansible-role-nginx       # our role to install nginx with acme.sh and cf dns integration
-│   ├── ansible-role-postgresql  # role to install a postgresql database server
-│   └── ansible-role-sshd
+├── roles                        # roles to add functionality to your server
+│   └── ansible-role-postgresql
 ├── ssh
 │   └── nicof2000.pub
 ├── tasks
@@ -133,12 +130,5 @@ hcloud-ansible
     └── fail2ban-sshd.conf.j2
 ```
 
-## [Examples](./docs/EXAMPLES.md)
-
-A full list of available system images can be aquired using the following command:
-```
-curl -s -H "Authorization: Bearer $TOKEN" \
-  "https://api.hetzner.cloud/v1/images" \
-  | jq -r '.images[] | select(.type == "system") | .name'
-```
-TODO: For whatever reason neighter fedora nor alma linux is available in this list
+Some examples configurations, e.g. how to use roles, can be
+found in the [examples](./docs/EXAMPLES.md) directory.
