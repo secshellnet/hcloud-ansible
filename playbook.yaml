@@ -26,7 +26,7 @@
   handlers:
     - name: "Restart sshd"
       ansible.builtin.systemd:
-        name: sshd
+        name: "{{ (ansible_facts['distribution'] in ['Ubuntu','Debian']) | ternary('ssh','sshd') }}"
         state: restarted
       become: true
 
