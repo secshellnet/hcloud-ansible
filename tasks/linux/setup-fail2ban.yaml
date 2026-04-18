@@ -16,7 +16,6 @@
   ansible.builtin.file:
     path: "/etc/fail2ban/jail.d/defaults-debian.conf"
     state: absent
-  # when: "ansible_facts['distribution'] in ['Ubuntu', 'Debian']" #  TODO test
   become: true
 
 - name: "Create sshd jail"

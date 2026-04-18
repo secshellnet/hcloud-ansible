@@ -5,3 +5,5 @@
     name: "rkhunter"
     state: present
   become: true
+
+# TODO scheduled exections

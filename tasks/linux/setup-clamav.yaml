@@ -15,7 +15,7 @@
 - name: "Update clamav database"
   when:
     - "freshclam.changed"
-    - "ansible_facts['distribution'] not in ['CentOS']"
+    - "ansible_facts['distribution'] not in ['CentOS']" # TODO permission error
   block:
     - name: "Stop clamav service"
       ansible.builtin.systemd:

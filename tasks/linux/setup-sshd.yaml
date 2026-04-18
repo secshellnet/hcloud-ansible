@@ -1,8 +1,7 @@
 ---
 - name: "Ensure openssh-server is installed"
   ansible.builtin.package:
-    name:
-      - openssh-server
+    name: openssh-server
     state: present
   become: true
 
@@ -79,20 +78,3 @@
     line: "X11Forwarding no"
   notify: "Restart sshd"
   become: true
-
-- name: "Create netbox service for ssh"
-  netbox.netbox.netbox_service:
-    netbox_url: "{{ netbox_url }}"
-    netbox_token: "{{ netbox_token }}"
-    data:
-      virtual_machine: "{{ inventory_hostname }}"
-      name: ssh
-      port: 22
-      protocol: TCP
-    state: present
-  delegate_to: localhost
-  when:
-    - "netbox_url is defined"
-    - "netbox_token is defined"
-    - "netbox_url is not none"
-    - "netbox_token is not none"
