@@ -13,10 +13,6 @@ all:
 #      server_type: cx23
 #      image: fedora-43
 
-#    rocky:
-#      server_type: cx23
-#      image: rocky-10
-
 #    alma:
 #      server_type: cx23
 #      image: alma-10
