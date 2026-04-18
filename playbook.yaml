@@ -31,7 +31,7 @@
       become: true
 
     - name: "Restart auditd"
-      when: "ansible_distribution not in ['AlmaLinux']"  # TODO doesn't work
+      when: "ansible_facts['distribution'] not in ['AlmaLinux']"  # TODO doesn't work
       ansible.builtin.systemd:
         name: auditd
         state: restarted
@@ -70,7 +70,7 @@
 
     - name: "Update repositories cache on systems using apt"
       when:
-        - "ansible_pkg_mgr == 'apt'"
+        - "ansible_facts['pkg_mgr'] == 'apt'"
       ansible.builtin.apt:
         update_cache: true
       changed_when: false
@@ -78,7 +78,7 @@
 
     - name: "Ensure extra packages for enterprise linux are installed"
       when:
-        - "ansible_distribution in ['CentOS', 'AlmaLinux', 'Rocky']"
+        - "ansible_facts['distribution'] in ['CentOS', 'AlmaLinux', 'Rocky']"
       ansible.builtin.package:
         name: epel-release
         state: present
@@ -120,7 +120,7 @@
       tags: [hardening, firewall]
 
     - name: "Setup auditd"
-      when: ansible_distribution in ['CentOS', 'AlmaLinux', 'Rocky']  # TODO until bugs fixed
+      when: ansible_facts['distribution'] in ['CentOS', 'AlmaLinux', 'Rocky']  # TODO until bugs fixed
       tags: [hardening]
       ansible.builtin.include_tasks:
         file: "tasks/linux/setup-auditd.yaml"
@@ -142,7 +142,7 @@
 
     - name: "Audit the system using openscap"
       tags: [audit]
-      when: "ansible_distribution not in ['Ubuntu', 'Debian']"  # TODO ssg files does not exist -> find solution
+      when: "ansible_facts['distribution'] not in ['Ubuntu', 'Debian']"  # TODO ssg files does not exist -> find solution
       ansible.builtin.include_tasks:
         file: "tasks/linux/audit-openscap.yaml"
         apply:

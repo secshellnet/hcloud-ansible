@@ -1,7 +1,7 @@
 ---
 - name: "Ensure the audit subsystem is installed"
   ansible.builtin.package:
-    name: "{{ (ansible_distribution in ['Ubuntu', 'Debian']) | ternary('auditd', 'audit') }}"
+    name: "{{ (ansible_facts['distribution'] in ['Ubuntu', 'Debian']) | ternary('auditd', 'audit') }}"
     state: present
   become: true
   register: auditd

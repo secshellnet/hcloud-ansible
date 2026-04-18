@@ -7,7 +7,7 @@
 
 - name: "Ensure freshclam is installed"
   ansible.builtin.package:
-    name: "{{ (ansible_distribution in ['Ubuntu', 'Debian']) | ternary('clamav-daemon', 'clamav-freshclam') }}"
+    name: "{{ (ansible_facts['distribution'] in ['Ubuntu', 'Debian']) | ternary('clamav-daemon', 'clamav-freshclam') }}"
     state: present
   become: true
   register: freshclam

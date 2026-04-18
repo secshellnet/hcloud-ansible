@@ -9,14 +9,14 @@
   ansible.builtin.package:
     name: python3-systemd
     state: present
-  when: "ansible_distribution in ['Ubuntu', 'Debian']"
+  when: "ansible_facts['distribution'] in ['Ubuntu', 'Debian']"
   become: true
 
 - name: "Remove default jail"
   ansible.builtin.file:
     path: "/etc/fail2ban/jail.d/defaults-debian.conf"
     state: absent
-  # when: "ansible_distribution in ['Ubuntu', 'Debian']" #  TODO test
+  # when: "ansible_facts['distribution'] in ['Ubuntu', 'Debian']" #  TODO test
   become: true
 
 - name: "Create sshd jail"

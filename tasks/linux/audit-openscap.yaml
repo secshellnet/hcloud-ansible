@@ -1,15 +1,15 @@
 ---
 - name: "Ensure openscap is installed"
   ansible.builtin.package:
-    name: "{{ (ansible_distribution in ['Ubuntu']) | ternary('libopenscap8', 'openscap-scanner') }}"
+    name: "{{ (ansible_facts['distribution'] in ['Ubuntu']) | ternary('libopenscap8', 'openscap-scanner') }}"
     state: present
   become: true
 
 - name: "Ensure scap security guide is installed"
   when:
-    - "ansible_distribution not in ['Ubuntu']"  # TODO how to install?
+    - "ansible_facts['distribution'] not in ['Ubuntu']"  # TODO how to install?
   ansible.builtin.package:
-    name: "{{ (ansible_distribution in ['Debian']) | ternary('ssg-debian', 'scap-security-guide') }}"  # TODO doesn't contain debian-12 version... probally requires adding newer mirror
+    name: "{{ (ansible_facts['distribution'] in ['Debian']) | ternary('ssg-debian', 'scap-security-guide') }}"  # TODO doesn't contain debian-12 version... probally requires adding newer mirror
     state: present
   become: true
 
@@ -24,7 +24,7 @@
         "Ubuntu": "ssg-ubuntu2404-ds.xml",
         "Debian": "ssg-debian13-ds.xml"
       } -%}
-      /usr/share/xml/scap/ssg/content/{{ mappings[ansible_distribution] }}
+      /usr/share/xml/scap/ssg/content/{{ mappings[ansible_facts['distribution']] }}
     ssg_profile: >-
       {%- set mappings = {
         "AlmaLinux": "xccdf_org.ssgproject.content_profile_anssi_bp28_enhanced",
@@ -34,7 +34,7 @@
         "Ubuntu": "xccdf_org.ssgproject.content_profile_standard",
         "Debian": "xccdf_org.ssgproject.content_profile_standard"
       } -%}
-      {{ mappings[ansible_distribution] }}
+      {{ mappings[ansible_facts['distribution']] }}
 
 #- name: "Audit system using openscap"
 #  ansible.builtin.command: |
