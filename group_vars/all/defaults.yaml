@@ -8,6 +8,8 @@ image: ubuntu-24.04
 enable_ipv4: false
 enable_ipv6: true
 
+ansible_python_interpreter: /usr/bin/python3
+
 # ansible-role-postgresql host based authentication defaults to md5
 postgresql_auth_method: scram-sha-256
 
