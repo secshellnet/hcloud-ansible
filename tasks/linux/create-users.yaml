@@ -2,6 +2,7 @@
 - name: Ensure user accounts exist
   ansible.builtin.user:
     name: "{{ item }}"
+    shell: "/bin/bash"
     state: present
   loop: "{{ users | default([]) }}"
   become: true
