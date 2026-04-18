@@ -13,7 +13,9 @@
   register: freshclam
 
 - name: "Update clamav database"
-  when: freshclam.changed
+  when:
+    - "freshclam.changed"
+    - "ansible_facts['distribution'] not in ['CentOS']"
   block:
     - name: "Stop clamav service"
       ansible.builtin.systemd:
